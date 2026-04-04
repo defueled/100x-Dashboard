@@ -77,6 +77,40 @@ async function getGHLContactByEmail(email: string) {
     }
 }
 
+async function upsertGHLContact(email: string, name?: string | null) {
+    if (!GHL_API_KEY || !GHL_LOCATION_ID) return null;
+    try {
+        const [firstName, ...rest] = (name || '').split(' ');
+        const res = await fetch('https://services.leadconnectorhq.com/contacts/upsert', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${GHL_API_KEY}`,
+                Version: '2021-07-28',
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                firstName: firstName || undefined,
+                lastName: rest.join(' ') || undefined,
+                locationId: GHL_LOCATION_ID,
+                tags: [GHL_DASHBOARD_TAG, 'dashboard-signup'],
+                source: '100x-dashboard',
+            }),
+        });
+        if (!res.ok) {
+            console.error('[NextAuth GHL] Upsert failed:', await res.text());
+            return null;
+        }
+        const data = await res.json();
+        console.log('[NextAuth GHL] Contact upserted:', data.contact?.id);
+        return data.contact ?? null;
+    } catch (error) {
+        console.error('[NextAuth GHL] Upsert error:', error);
+        return null;
+    }
+}
+
 async function addGHLTag(contactId: string, tag: string) {
     try {
         await fetch(`https://services.leadconnectorhq.com/contacts/${contactId}/tags`, {
@@ -110,9 +144,14 @@ export const authOptions: NextAuthOptions = {
                     console.error('❌ [NextAuth] Supabase client is null. Sign-in failed.');
                     return false;
                 }
-                const ghlContact = await getGHLContactByEmail(user.email);
+                let ghlContact = await getGHLContactByEmail(user.email);
                 let isSubscribed = false;
                 let userGhlTags: string[] = [];
+
+                // New user — create contact in GHL so they appear in the pipeline
+                if (!ghlContact) {
+                    ghlContact = await upsertGHLContact(user.email, user.name);
+                }
 
                 if (
                     user.email === '100xviedakomuna@gmail.com' ||
