@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #F8FAF9;
+  --color-foreground: #000000;
+  --color-brand-blue: #188bf6;
+  --color-brand-green: #59b687;
+  --color-brand-orange: #f6ad55;
+  --color-brand-dark: #2c3345;
+  --font-heading: var(--font-rubik), var(--font-geist-sans);
+
+  /* Premium Glassmorphism & Effects */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  --shadow-glow-green: 0 0 20px rgba(89, 182, 135, 0.2);
+
+  @keyframes gradient-flow {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  --animate-gradient-flow: gradient-flow 3s ease infinite;
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+
+    50% {
+      transform: translateY(-30px) scale(1.05);
+    }
+  }
+
+  --animate-float: float 15s ease-in-out infinite;
+
+  @keyframes float-reverse {
+
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+
+    50% {
+      transform: translateY(40px) scale(0.95);
+    }
+  }
+
+  --animate-float-delayed: float-reverse 18s ease-in-out infinite;
+}
+
+@layer utilities {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .text-gradient-premium {
+    background-image: linear-gradient(to right, #188bf6, #59b687, #188bf6);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: var(--animate-gradient-flow);
+  }
+
+  .animate-float {
+    animation: var(--animate-float);
+  }
+
+  .animate-float-delayed {
+    animation: var(--animate-float-delayed);
+  }
+}
+
+@layer components {
+  .bg-blob {
+    @apply absolute -z-10 blur-[120px] rounded-full opacity-20 animate-pulse;
+  }
+}
+
+@layer base {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
+  }
+}
