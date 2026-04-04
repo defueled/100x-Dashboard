@@ -56,9 +56,8 @@ import { LevelUpModal } from './gamification/LevelUpModal';
 import { OnboardingWizard } from './OnboardingWizard';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 
-const XP_PER_LEVEL = 1000;
-
-const calculateLevel = (totalXp: number) => Math.floor(totalXp / XP_PER_LEVEL) + 1;
+// Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
+const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
 
 
 type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe';
