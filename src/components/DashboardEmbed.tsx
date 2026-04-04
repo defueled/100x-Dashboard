@@ -53,6 +53,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useCallback } from 'react';
 import { LevelUpModal } from './gamification/LevelUpModal';
+import { OnboardingWizard } from './OnboardingWizard';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 
 const XP_PER_LEVEL = 1000;
@@ -761,6 +762,7 @@ export function DashboardEmbed() {
     const [newLevel, setNewLevel] = useState(1);
 
     const [profileData, setProfileData] = useState<any>(null);
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     const fetchProgress = useCallback(async () => {
         if (!session?.user?.email) return;
@@ -769,7 +771,7 @@ export function DashboardEmbed() {
         const [progressRes, claimsRes, profileRes] = await Promise.all([
             supabase.from('user_progress').select('*').eq('user_email', session.user.email),
             supabase.from('xp_claims').select('*').eq('user_email', session.user.email),
-            supabase.from('profiles').select('gm_streak, total_xp').eq('email', session.user.email).single()
+            supabase.from('profiles').select('gm_streak, total_xp, onboarding_complete, display_name, wallet_address').eq('email', session.user.email).single()
         ]);
 
         const combinedProgress = [
@@ -786,6 +788,9 @@ export function DashboardEmbed() {
         setDbProgress(combinedProgress);
         if (profileRes.data) {
             setProfileData(profileRes.data);
+            if (!profileRes.data.onboarding_complete) {
+                setShowOnboarding(true);
+            }
         }
     }, [session]);
 
@@ -879,6 +884,16 @@ export function DashboardEmbed() {
 
     return (
         <div className="w-full h-full bg-[#f8fafc] text-[#1a1a2e] flex overflow-hidden font-sans">
+            {/* Onboarding wizard — shown only on first login */}
+            {showOnboarding && (
+                <OnboardingWizard
+                    userName={session?.user?.name || profileData?.display_name || 'Komūnas biedrs'}
+                    onComplete={() => {
+                        setShowOnboarding(false);
+                        fetchProgress();
+                    }}
+                />
+            )}
             {/* ... sidebar 1 */}
             <aside className="w-16 bg-white border-r border-gray-100 flex flex-col items-center py-6 gap-1 shrink-0">
                 <div className="mb-6 flex items-center justify-center">
