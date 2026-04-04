@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-    User, 
-    Link2, 
-    Wallet, 
-    Globe, 
-    Twitter, 
-    Save, 
-    Shield, 
+import {
+    User,
+    Link2,
+    Wallet,
+    Globe,
+    Twitter,
+    Save,
+    Shield,
     Camera,
     Loader2,
-    Trophy
+    Trophy,
+    Crown,
+    Lock
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +23,7 @@ export function ProfileSettings() {
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [daoLoading, setDaoLoading] = useState(false);
     const [profile, setProfile] = useState({
         evm_address: '',
         profile_description: '',
@@ -59,6 +62,19 @@ export function ProfileSettings() {
             console.error('Error fetching profile:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDaoJoin = async () => {
+        setDaoLoading(true);
+        try {
+            const res = await fetch('/api/dao/invite', { method: 'POST' });
+            const data = await res.json();
+            if (data.deepLink) {
+                window.open(data.deepLink, '_blank');
+            }
+        } finally {
+            setDaoLoading(false);
         }
     };
 
@@ -187,6 +203,49 @@ export function ProfileSettings() {
                                 })}
                             </div>
                         </div>
+
+                        {/* DAO Access Section */}
+                        {currentGhlLevel >= 4 ? (
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl shadow-sm">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <div className="p-2 rounded-lg bg-white/10 text-yellow-400">
+                                        <Crown size={18} />
+                                    </div>
+                                    <h3 className="font-bold text-white">100x DAO 🔐</h3>
+                                </div>
+                                <p className="text-gray-300 text-sm font-semibold mb-1">Ekskluzīva piekļuve DAO biedru grupai</p>
+                                <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                                    Tu esi sasniedzis Lvl 4 — Pētnieks. Apsveicu, tev ir tiesības pievienoties privātajai DAO grupai Telegram.
+                                </p>
+                                <button
+                                    onClick={handleDaoJoin}
+                                    disabled={daoLoading}
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-white text-gray-900 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all disabled:opacity-50"
+                                >
+                                    {daoLoading ? <Loader2 className="animate-spin" size={16} /> : <Crown size={16} />}
+                                    Pievienojies DAO Telegram →
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <div className="p-2 rounded-lg bg-gray-100 text-gray-400">
+                                        <Lock size={18} />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900">100x DAO 🔐</h3>
+                                    <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-400 rounded-full text-[10px] font-black uppercase tracking-wider">Slēgts</span>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-500 mb-4">Nepieciešams: Lvl 4 — Pētnieks 🔍</p>
+                                <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
+                                    <div
+                                        className="bg-indigo-500 h-2 rounded-full transition-all"
+                                        style={{ width: `${Math.min((currentGhlLevel / 4) * 100, 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-400 font-semibold mb-3">Tavs līmenis: {currentGhlLevel} / 4</p>
+                                <p className="text-[11px] text-gray-400">Apmeklē GHL forumus un paaugstini savu līmeni</p>
+                            </div>
+                        )}
 
                         {/* Wallet Section */}
                         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
