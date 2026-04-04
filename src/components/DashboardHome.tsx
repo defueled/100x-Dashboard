@@ -67,9 +67,11 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
         }
     };
 
-    const currentLevel = Math.floor(totalXp / 1000) + 1;
-    const nextLevelXp = currentLevel * 1000;
-    const progressPercent = ((totalXp % 1000) / 1000) * 100;
+    // Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
+    const currentLevel = Math.floor(Math.sqrt(totalXp / 100)) + 1;
+    const nextLevelXp = Math.pow(currentLevel, 2) * 100;
+    const prevLevelXp = Math.pow(currentLevel - 1, 2) * 100;
+    const progressPercent = Math.min(((totalXp - prevLevelXp) / (nextLevelXp - prevLevelXp)) * 100, 100);
 
     return (
         <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAF9]/50">
