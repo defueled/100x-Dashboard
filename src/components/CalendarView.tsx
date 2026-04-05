@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays, ShoppingBag, CheckCircle2, Lock, Zap, Clock, ShieldAlert, Sparkles, TrendingUp, Cpu } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
@@ -71,6 +71,17 @@ export function CalendarView() {
     const [activeTab, setActiveTab] = useState<Tab>('marketplace');
     const [activeCalendars, setActiveCalendars] = useState<string[]>([]);
     const [activationLoading, setActivationLoading] = useState<string | null>(null);
+    const [ghlEvents, setGhlEvents] = useState<any[]>([]);
+    const [eventsLoading, setEventsLoading] = useState(false);
+
+    useEffect(() => {
+        setEventsLoading(true);
+        fetch('/api/events')
+            .then(r => r.json())
+            .then(d => setGhlEvents(d.events || []))
+            .catch(() => {})
+            .finally(() => setEventsLoading(false));
+    }, []);
 
     const handleActivate = async (productId: string, icsUrl?: string) => {
         setActivationLoading(productId);
@@ -193,6 +204,40 @@ export function CalendarView() {
                             <div className="mb-8">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Tavs Reāllaika Ritms</h2>
                                 <p className="text-gray-500">Šeit tu pārvaldi aktīvos kalendārus un sazinies ar AI Aģentu. Paziņojumi pienāks automātiski visos pieslēgtajos kanālos (E-pasts, WhatsApp).</p>
+                            </div>
+
+                            {/* UPCOMING GHL EVENTS */}
+                            <div className="mb-8">
+                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <CalendarDays size={14} /> Gaidāmie Kopienas Pasākumi
+                                </h3>
+                                {eventsLoading ? (
+                                    <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center text-sm text-gray-400">Ielādē...</div>
+                                ) : ghlEvents.length === 0 ? (
+                                    <div className="bg-white rounded-2xl border border-dashed border-gray-100 p-6 text-center text-sm text-gray-400">
+                                        Nav ieplānotu pasākumu nākamajās 30 dienās
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {ghlEvents.slice(0, 5).map((ev: any) => {
+                                            const start = new Date(ev.start);
+                                            return (
+                                                <div key={ev.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center shrink-0">
+                                                        <span className="text-[10px] font-black text-indigo-400 uppercase">{start.toLocaleString('lv-LV', { month: 'short' })}</span>
+                                                        <span className="text-lg font-black text-indigo-700 leading-none">{start.getDate()}</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-gray-900 truncate">{ev.title}</p>
+                                                        <p className="text-[11px] text-gray-400 font-medium">
+                                                            {start.toLocaleString('lv-LV', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             {activeCalendars.length === 0 ? (

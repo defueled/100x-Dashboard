@@ -770,7 +770,7 @@ export function DashboardEmbed() {
         const [progressRes, claimsRes, profileRes] = await Promise.all([
             supabase.from('user_progress').select('*').eq('user_email', session.user.email),
             supabase.from('xp_claims').select('*').eq('user_email', session.user.email),
-            supabase.from('profiles').select('gm_streak, total_xp, onboarding_complete, display_name, wallet_address').eq('email', session.user.email).single()
+            supabase.from('profiles').select('gm_streak, total_xp, onboarding_complete, display_name, evm_address, last_gm_at').eq('email', session.user.email).single()
         ]);
 
         const combinedProgress = [
