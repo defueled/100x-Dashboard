@@ -54,13 +54,14 @@ import { supabase } from '@/lib/supabase';
 import { useEffect, useCallback } from 'react';
 import { LevelUpModal } from './gamification/LevelUpModal';
 import { OnboardingWizard } from './OnboardingWizard';
+import { LeaderboardView } from './LeaderboardView';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 
 // Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
 const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
 
 
-type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe';
+type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard';
 type QuestStatus = 'completed' | 'active' | 'locked';
 
 interface Quest {
@@ -1039,6 +1040,13 @@ export function DashboardEmbed() {
                                     <span className="text-[8px] uppercase bg-orange-500 text-white px-1.5 py-0.5 rounded">Šodien</span>
                                 </span>
                             </button>
+                            <button
+                                onClick={() => setActiveView('leaderboard')}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${activeView === 'leaderboard' ? 'bg-amber-50 text-amber-600 font-semibold' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50/50'}`}
+                            >
+                                <Trophy size={18} strokeWidth={activeView === 'leaderboard' ? 2 : 1.5} />
+                                <span>Līderu Saraksts</span>
+                            </button>
                             <a
                                 href="https://t.me/+AzkOgTHpNENmYjU0"
                                 target="_blank"
@@ -1084,6 +1092,7 @@ export function DashboardEmbed() {
                 {activeView === 'calendar' && <CalendarView />}
                 {activeView === 'profile' && <ProfileSettings />}
                 {activeView === 'news' && <NewsView initialCategory="ai" />}
+                {activeView === 'leaderboard' && <LeaderboardView />}
                 {activeView === 'vibe' && (
                     <VibeView
                         session={session}
