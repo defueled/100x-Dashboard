@@ -184,6 +184,15 @@ export const authOptions: NextAuthOptions = {
                     ghl_tags: userGhlTags,
                 };
 
+                // Generate referral code for new users (6-char alphanumeric)
+                const { data: existingForCode } = await supabase
+                    .from('profiles')
+                    .select('referral_code')
+                    .eq('email', user.email)
+                    .single();
+                const referralCode = existingForCode?.referral_code ||
+                    Math.random().toString(36).substring(2, 8).toUpperCase();
+
                 const { error } = await supabase.from('profiles').upsert(
                     {
                         id: user.id,
@@ -192,6 +201,7 @@ export const authOptions: NextAuthOptions = {
                         avatar_url: user.image,
                         is_subscribed: isSubscribed,
                         socials: newSocials,
+                        referral_code: referralCode,
                     },
                     { onConflict: 'email' }
                 );

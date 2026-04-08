@@ -752,6 +752,7 @@ import { ProfileSettings } from './profile/ProfileSettings';
 import { NewsView } from './news/NewsView';
 import { DashboardHome } from './DashboardHome';
 import { VibeView } from './vibe/VibeView';
+import { TokenGate } from './TokenGate';
 
 export function DashboardEmbed() {
     const { data: session } = useSession();
@@ -798,6 +799,12 @@ export function DashboardEmbed() {
     useEffect(() => {
         fetchProgress();
     }, [fetchProgress]);
+
+    // Process referral cookie once on first dashboard load (fire-and-forget)
+    useEffect(() => {
+        if (!session?.user?.email) return;
+        void fetch('/api/referral/process', { method: 'POST' });
+    }, [session?.user?.email]);
 
     const totalXp = dbProgress.reduce((sum: number, p: any) => sum + (p.xp_earned || 0), 0);
     const currentLevel = calculateLevel(totalXp);
@@ -1087,7 +1094,11 @@ export function DashboardEmbed() {
                     />
                 )}
                 {activeView === 'tredfi' && <TredfiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />}
-                {activeView === 'defi' && <DeFiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />}
+                {activeView === 'defi' && (
+                    <TokenGate evmAddress={profileData?.evm_address} minBalance={1} featureName="DeFi Dungeon">
+                        <DeFiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />
+                    </TokenGate>
+                )}
                 {activeView === 'culture' && <CultureView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />}
                 {activeView === 'calendar' && <CalendarView />}
                 {activeView === 'profile' && <ProfileSettings />}

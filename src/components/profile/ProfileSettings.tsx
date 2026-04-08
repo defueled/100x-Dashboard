@@ -18,7 +18,9 @@ import {
     Flame,
     Edit3,
     Target,
-    CheckCircle2
+    CheckCircle2,
+    Copy,
+    Users,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
@@ -50,6 +52,9 @@ export function ProfileSettings() {
     const [saving, setSaving] = useState(false);
     const [daoLoading, setDaoLoading] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [referralCode, setReferralCode] = useState('');
+    const [referralCount, setReferralCount] = useState(0);
+    const [referralCopied, setReferralCopied] = useState(false);
 
     // Auto-fill EVM address when wallet connects
     useEffect(() => {
@@ -81,7 +86,7 @@ export function ProfileSettings() {
         try {
             const { data } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('*, referral_code, referral_count')
                 .eq('email', session?.user?.email)
                 .single();
 
@@ -100,6 +105,8 @@ export function ProfileSettings() {
                         webpage: rawSocials.webpage ?? ''
                     }
                 });
+                if (data.referral_code) setReferralCode(data.referral_code);
+                setReferralCount(data.referral_count ?? 0);
             }
         } catch (err) {
             console.error('Error fetching profile:', err);
@@ -284,6 +291,41 @@ export function ProfileSettings() {
                                 Tavs EVM maciņš ir vieta, kur saņemsi visus Mintiņš airdrops. Pārliecinies, ka adrese ir pareiza!
                             </p>
                         </div>
+
+                        {/* Referral Card */}
+                        {referralCode && (
+                            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg bg-violet-50 text-violet-600">
+                                        <Users size={14} />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-900">Referrals</h3>
+                                    {referralCount > 0 && (
+                                        <span className="ml-auto px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full text-[10px] font-black">
+                                            {referralCount} uzaicināti
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
+                                    Uzaicini draugus — saņem <span className="font-bold text-violet-600">+100 XP</span> par katru reģistrāciju.
+                                </p>
+                                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                                    <span className="text-xs font-mono text-gray-700 truncate flex-1">
+                                        100x.lv/ref/{referralCode}
+                                    </span>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`https://100x.lv/ref/${referralCode}`);
+                                            setReferralCopied(true);
+                                            setTimeout(() => setReferralCopied(false), 2000);
+                                        }}
+                                        className="p-1.5 rounded-lg bg-white border border-gray-200 hover:border-violet-400 text-gray-400 hover:text-violet-600 transition-all shrink-0"
+                                    >
+                                        {referralCopied ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column */}

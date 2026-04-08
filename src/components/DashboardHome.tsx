@@ -8,9 +8,59 @@ import {
     Flame,
     CheckCircle2,
     Sparkles,
+    Newspaper,
+    ExternalLink,
 } from 'lucide-react';
 import { MintinaBalanceChip, MintinaAirdropCard, MintinaMarketCard } from './mintins/MintinaStats';
 import { motion } from 'framer-motion';
+
+function NewsPreviewCard() {
+    const [news, setNews] = useState<{ title: string; link: string; source: string; pubDate: string }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/news?category=ai')
+            .then(r => r.json())
+            .then(data => Array.isArray(data) && setNews(data.slice(0, 3)))
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    return (
+        <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm md:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
+                        <Newspaper size={18} className="text-orange-500" />
+                    </div>
+                    <h3 className="text-lg font-black text-gray-900">Mintiņš Ziņas</h3>
+                </div>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI · Live</span>
+            </div>
+            <div className="space-y-3">
+                {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-10 bg-gray-50 rounded-2xl animate-pulse" />
+                    ))
+                ) : news.map((item, i) => (
+                    <a
+                        key={i}
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start justify-between gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-orange-50 transition-colors group"
+                    >
+                        <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-900 group-hover:text-orange-600 line-clamp-2 leading-snug transition-colors">{item.title}</p>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{item.source} · {new Date(item.pubDate).toLocaleDateString('lv-LV')}</p>
+                        </div>
+                        <ExternalLink size={12} className="text-gray-300 group-hover:text-orange-400 shrink-0 mt-1 transition-colors" />
+                    </a>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 interface DashboardHomeProps {
     session: any;
@@ -218,6 +268,9 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                             ))}
                         </div>
                     </div>
+
+                    {/* NEWS PREVIEW */}
+                    <NewsPreviewCard />
 
                 </div>
             </div>
