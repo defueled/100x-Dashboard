@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { syncUserToGHL } from '@/lib/ghlSync';
 
-// Initialize Supabase with Service Role for admin overrides
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic';
 
 // Season 1 airdrop: Mintiņš distributed via claim window at end of season, not per-task.
 // XP accumulates here. Token distribution happens separately when claim window opens.
