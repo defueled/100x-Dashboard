@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Rubik } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import { AgentWidget } from "@/components/AgentWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +38,6 @@ export default function RootLayout({
         <NextAuthProvider>
           {children}
         </NextAuthProvider>
-        <AgentWidget />
         <Toaster position="bottom-center" />
       </body>
     </html>

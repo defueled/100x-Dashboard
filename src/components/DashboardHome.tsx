@@ -9,6 +9,7 @@ import {
     CheckCircle2,
     Sparkles,
 } from 'lucide-react';
+import { MintinaBalanceChip, MintinaAirdropCard, MintinaMarketCard } from './mintins/MintinaStats';
 import { motion } from 'framer-motion';
 
 interface DashboardHomeProps {
@@ -86,6 +87,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                         <p className="text-sm text-gray-400 font-medium">Tavs šīsdienas progress.</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <MintinaBalanceChip evmAddress={profileData?.evm_address} />
                         <div className="px-4 py-2 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-2">
                             <Clock size={16} className="text-emerald-500" />
                             <span className="text-xs font-bold text-gray-600">Sezona 1: Turpinās</span>
@@ -94,7 +96,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                 </div>
 
                 {/* Bento Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-auto">
 
                     {/* GM WIDGET */}
                     <motion.div
@@ -162,6 +164,9 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                         </div>
                     </div>
 
+                    {/* MINTINA AIRDROP */}
+                    <MintinaAirdropCard totalXp={totalXp} seasonMultiplier={seasonMultiplier} />
+
                     {/* TELEGRAM CARD */}
                     <a
                         href="https://t.me/+AzkOgTHpNENmYjU0"
@@ -182,6 +187,9 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                             Pievienojies →
                         </div>
                     </a>
+
+                    {/* MINTINA MARKET */}
+                    <MintinaMarketCard />
 
                     {/* QUICK TASKS */}
                     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm md:col-span-2">

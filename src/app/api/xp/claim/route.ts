@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { createClient } from '@supabase/supabase-js';
+import { syncUserToGHL } from '@/lib/ghlSync';
 
 // Initialize Supabase with Service Role for admin overrides
 const supabase = createClient(
@@ -60,6 +61,9 @@ export async function POST(req: Request) {
         }).eq('email', session.user.email);
 
         if (upsertError) throw upsertError;
+
+        // Fire-and-forget GHL sync
+        void syncUserToGHL(session.user.email, { total_xp: newTotalXp, level: newLevel });
 
         await supabase.from('xp_claims').insert({
             user_email: session.user.email,

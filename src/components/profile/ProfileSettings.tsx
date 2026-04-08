@@ -17,9 +17,12 @@ import {
     Zap,
     Flame,
     Edit3,
-    Target
+    Target,
+    CheckCircle2
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { supabase } from '@/lib/supabase';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 import { OnboardingWizard } from '../OnboardingWizard';
@@ -42,10 +45,18 @@ const calculateLevel = (xp: number) => Math.floor(Math.sqrt(xp / 100)) + 1;
 
 export function ProfileSettings() {
     const { data: session } = useSession();
+    const { address: walletAddress, isConnected } = useAccount();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [daoLoading, setDaoLoading] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+
+    // Auto-fill EVM address when wallet connects
+    useEffect(() => {
+        if (isConnected && walletAddress) {
+            setProfile(p => ({ ...p, evm_address: walletAddress }));
+        }
+    }, [isConnected, walletAddress]);
     const [profile, setProfile] = useState({
         evm_address: '',
         profile_description: '',
@@ -465,12 +476,26 @@ export function ProfileSettings() {
 
                         {/* EVM Wallet */}
                         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-                                    <Wallet size={18} />
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                                        <Wallet size={18} />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900">EVM Maciņa Adrese</h3>
                                 </div>
-                                <h3 className="font-bold text-gray-900">EVM Maciņa Adrese</h3>
+                                <ConnectButton
+                                    label="Savienot Maciņu"
+                                    accountStatus="avatar"
+                                    chainStatus="none"
+                                    showBalance={false}
+                                />
                             </div>
+                            {isConnected && walletAddress && (
+                                <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-emerald-50 rounded-xl text-xs font-bold text-emerald-700">
+                                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                    Maciņš savienots — adrese automātiski aizpildīta
+                                </div>
+                            )}
                             <input
                                 type="text"
                                 placeholder="0x..."

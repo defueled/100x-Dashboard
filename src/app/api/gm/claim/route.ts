@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { supabase } from '@/lib/supabase';
+import { syncUserToGHL } from '@/lib/ghlSync';
 
 export async function POST(req: Request) {
     try {
@@ -62,6 +63,10 @@ export async function POST(req: Request) {
             .eq('email', email);
 
         if (uError) throw uError;
+
+        // Fire-and-forget GHL sync
+        const newLevel = Math.floor(Math.sqrt(newTotalXp / 100)) + 1;
+        void syncUserToGHL(email, { total_xp: newTotalXp, gm_streak: newStreak, level: newLevel });
 
         // 5. Record claim in xp_claims (with unique daily ID)
         const dayString = now.toISOString().split('T')[0];
