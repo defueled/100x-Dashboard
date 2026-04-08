@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Rubik } from "next/font/google";
 import "./globals.css";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import { Web3Provider } from "@/components/providers/Web3Provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,9 +36,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${rubik.variable} antialiased`}
       >
         <NextAuthProvider>
-          <Web3Provider>
-            {children}
-          </Web3Provider>
+          {children}
         </NextAuthProvider>
         <Toaster position="bottom-center" />
       </body>
