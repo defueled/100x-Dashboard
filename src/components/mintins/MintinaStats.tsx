@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Coins, Gem } from 'lucide-react';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 interface MintinaStatsProps {
     evmAddress?: string;
@@ -45,6 +46,7 @@ export function MintinaStats({ evmAddress, totalXp, seasonMultiplier }: MintinaS
 export function MintinaBalanceChip({ evmAddress }: { evmAddress?: string }) {
     const [mintinsBalance, setMintinsBalance] = useState<number | null>(null);
     const [balanceLoading, setBalanceLoading] = useState(false);
+    const { openConnectModal } = useConnectModal();
 
     useEffect(() => {
         if (!evmAddress) return;
@@ -58,10 +60,13 @@ export function MintinaBalanceChip({ evmAddress }: { evmAddress?: string }) {
 
     if (!evmAddress) {
         return (
-            <div className="px-4 py-2 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-2">
+            <button
+                onClick={openConnectModal}
+                className="px-4 py-2 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors cursor-pointer"
+            >
                 <Coins size={16} className="text-gray-300" />
                 <span className="text-xs font-bold text-gray-400">Pievieno maku → MNTŠ</span>
-            </div>
+            </button>
         );
     }
 
