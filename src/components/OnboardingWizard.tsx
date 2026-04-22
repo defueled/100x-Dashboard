@@ -56,10 +56,15 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
         return false;
     };
 
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [awardedXp, setAwardedXp] = useState(0);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
     const handleFinish = async () => {
         setSaving(true);
+        setSaveError(null);
         try {
-            await fetch('/api/onboarding/complete', {
+            const res = await fetch('/api/onboarding/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -69,11 +74,44 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                     referral_source: referralSource,
                 }),
             });
-            onComplete();
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setSaveError(data.error || `Kļūda (${res.status}). Mēģini vēlreiz.`);
+                return;
+            }
+            setAwardedXp(Number(data.awardedXp) || 0);
+            setShowSuccess(true);
+            setTimeout(() => onComplete(), 2000);
+        } catch (e) {
+            setSaveError(e instanceof Error ? e.message : 'Tīkla kļūda');
         } finally {
             setSaving(false);
         }
     };
+
+    if (showSuccess) {
+        const firstTime = awardedXp > 0;
+        return (
+            <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-white rounded-3xl p-10 max-w-sm w-full text-center shadow-2xl"
+                >
+                    <div className="text-6xl mb-4">{firstTime ? '🎉' : '✓'}</div>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">
+                        {firstTime ? 'Profils aizpildīts!' : 'Profils atjaunots!'}
+                    </h2>
+                    {firstTime ? (
+                        <p className="text-lg font-black text-emerald-600">+{awardedXp} XP iekasēts</p>
+                    ) : (
+                        <p className="text-sm text-gray-500">XP jau iekasēts agrāk</p>
+                    )}
+                    <p className="text-sm text-gray-400 mt-2">Ielādē dashboard...</p>
+                </motion.div>
+            </div>
+        );
+    }
 
     const steps = [
         // Step 0: Name
@@ -235,6 +273,13 @@ export function OnboardingWizard({ userName, onComplete }: OnboardingWizardProps
                             {steps[step]}
                         </AnimatePresence>
                     </div>
+
+                    {/* Error banner */}
+                    {saveError && (
+                        <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-medium text-red-700 text-center">
+                            {saveError}
+                        </div>
+                    )}
 
                     {/* Navigation */}
                     <div className="flex gap-3 mt-6">

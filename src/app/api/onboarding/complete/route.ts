@@ -50,18 +50,20 @@ export async function POST(req: Request) {
         .eq('task_id', 'onboarding_complete')
         .maybeSingle();
 
+    let awardedXp = 0;
+    let newTotalXp: number | null = null;
+
     if (!existing) {
-        // Fetch current XP so we can increment it
         const { data: profile } = await supabase
             .from('profiles')
             .select('total_xp')
             .eq('email', session.user.email)
             .single();
 
-        const newTotalXp = (Number(profile?.total_xp) || 0) + 50;
+        newTotalXp = (Number(profile?.total_xp) || 0) + 50;
         const newLevel = Math.floor(Math.sqrt(newTotalXp / 100)) + 1;
 
-        await Promise.all([
+        const [claimRes, updateRes] = await Promise.all([
             supabase.from('xp_claims').insert({
                 user_email: session.user.email,
                 task_id: 'onboarding_complete',
@@ -73,8 +75,21 @@ export async function POST(req: Request) {
             }).eq('email', session.user.email),
         ]);
 
+        if (claimRes.error || updateRes.error) {
+            console.error('[Onboarding] XP award failed:', {
+                claim: claimRes.error?.message,
+                update: updateRes.error?.message,
+            });
+            return NextResponse.json({
+                success: true,
+                awardedXp: 0,
+                error: claimRes.error?.message || updateRes.error?.message,
+            });
+        }
+
+        awardedXp = 50;
         void syncUserToGHL(session.user.email, { total_xp: newTotalXp, level: newLevel });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, awardedXp, totalXp: newTotalXp });
 }
