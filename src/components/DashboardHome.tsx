@@ -166,17 +166,17 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     const progressPercent = Math.min(((totalXp - prevLevelXp) / (nextLevelXp - prevLevelXp)) * 100, 100);
 
     return (
-        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAF9]/50">
-            <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 bg-[#F8FAF9]/50">
+            <div className="max-w-6xl mx-auto flex flex-col gap-5 md:gap-8">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 order-2 md:order-1">
                     <div>
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
                             Sveiks, {session?.user?.name?.split(' ')[0]}! 🚀
                         </h1>
                         <p className="text-sm text-gray-400 font-medium">Tavs šīsdienas progress.</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                         <MintinaBalanceChip evmAddress={profileData?.evm_address} />
                         <div className="px-4 py-2 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-2">
                             <Clock size={16} className="text-emerald-500" />
@@ -186,7 +186,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                 </div>
 
                 {/* Bento Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-auto">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 auto-rows-auto order-1 md:order-2">
 
                     {/* GM WIDGET */}
                     <motion.div

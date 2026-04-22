@@ -45,7 +45,8 @@ import {
     Globe,
     ArrowRight,
     Newspaper,
-    Code2
+    Code2,
+    Menu
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
@@ -616,7 +617,7 @@ function TredfiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseView
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="TradFi foruma progress" value={forumProgress?.tradfi ?? 0} color="#59b687" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#59b687" />
@@ -680,7 +681,7 @@ function DeFiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewPr
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="DeFi foruma progress" value={forumProgress?.defi ?? 0} color="#4A9EE5" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#4A9EE5" />
@@ -744,7 +745,7 @@ function CultureView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseVie
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="Kultūras foruma progress" value={forumProgress?.culture ?? 0} color="#F5A623" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#F5A623" />
@@ -785,6 +786,10 @@ export function DashboardEmbed() {
 
     const [profileData, setProfileData] = useState<any>(null);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+    // Close mobile nav when the active view changes (tap a menu item → drawer slides shut)
+    useEffect(() => { setMobileNavOpen(false); }, [activeView]);
 
     const fetchProgress = useCallback(async () => {
         if (!session?.user?.email) return;
@@ -921,7 +926,7 @@ export function DashboardEmbed() {
                 />
             )}
             {/* ... sidebar 1 */}
-            <aside className="w-16 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex flex-col items-center py-6 gap-1 shrink-0">
+            <aside className="hidden md:flex w-16 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex-col items-center py-6 gap-1 shrink-0">
                 <div className="mb-6 flex items-center justify-center">
                     <Image src="/assets/logos/100x-refined-logo.png" alt="100x" width={36} height={36} className="w-9 h-auto" />
                 </div>
@@ -943,8 +948,31 @@ export function DashboardEmbed() {
                 </button>
             </aside>
 
+            {/* Mobile top bar */}
+            <div className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-white dark:bg-[var(--color-dark-surface)] border-b border-gray-100 dark:border-[var(--color-dark-border)] flex items-center justify-between px-4">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setMobileNavOpen(true)}
+                        className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[var(--color-dark-border)]"
+                        aria-label="Atvērt izvēlni"
+                    >
+                        <Menu size={20} />
+                    </button>
+                    <Image src="/assets/logos/100x-refined-logo.png" alt="100x" width={28} height={28} className="w-7 h-auto" />
+                </div>
+                <ThemeToggle />
+            </div>
+
+            {/* Mobile backdrop */}
+            {mobileNavOpen && (
+                <div
+                    onClick={() => setMobileNavOpen(false)}
+                    className="md:hidden fixed inset-0 z-40 bg-black/50"
+                />
+            )}
+
             {/* Expanded Sidebar */}
-            <aside className="w-72 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex flex-col shrink-0">
+            <aside className={`${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-72 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex flex-col shrink-0 transition-transform md:transition-none`}>
                 <div className="p-6 pb-4">
                     <div className="flex items-center gap-3 mb-5">
                         <div className="relative">
@@ -996,7 +1024,7 @@ export function DashboardEmbed() {
                         {dynamicStats.map(stat => (
                             <div key={stat.label} className="flex-1 bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
                                 <div className="text-[10px] text-[#59b687] mb-0.5">{stat.icon}</div>
-                                <p className="font-bold text-base leading-tight">{stat.value}</p>
+                                <p className="font-bold text-base leading-tight text-gray-900">{stat.value}</p>
                                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">{stat.label}</p>
                             </div>
                         ))}
