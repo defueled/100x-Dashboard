@@ -60,7 +60,7 @@ export function LeaderboardView({ currentUserEmail }: { currentUserEmail?: strin
     const rest = members.slice(3);
 
     return (
-        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAF9]/50">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 bg-[#F8FAF9]/50">
             <div className="max-w-3xl mx-auto space-y-8">
 
                 {/* Header */}

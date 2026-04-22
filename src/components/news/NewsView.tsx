@@ -104,7 +104,7 @@ export function NewsView({ initialCategory = 'ai' }: { initialCategory?: Categor
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-8 pt-4">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-4">
                 {loading ? (
                     <div className="h-full flex flex-col items-center justify-center space-y-4">
                         <Loader2 className="animate-spin text-emerald-500" size={32} />

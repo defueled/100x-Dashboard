@@ -131,18 +131,6 @@ export function ProfileSettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const { error: sError } = await supabase
-                .from('profiles')
-                .update({
-                    evm_address: profile.evm_address,
-                    profile_description: profile.profile_description,
-                    display_name: profile.display_name,
-                    socials: profile.socials
-                })
-                .eq('email', session?.user?.email);
-
-            if (sError) throw sError;
-
             const response = await fetch('/api/profile/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -150,7 +138,8 @@ export function ProfileSettings() {
             });
 
             if (!response.ok) {
-                console.error('GHL Sync failed');
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || 'Save failed');
             }
 
             alert('Profils veiksmīgi atjaunots! 🚀');
@@ -184,7 +173,7 @@ export function ProfileSettings() {
     );
 
     return (
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-8">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-8 pt-20 md:pt-8">
             {/* Onboarding re-open from profile */}
             {showOnboarding && (
                 <OnboardingWizard
@@ -196,9 +185,9 @@ export function ProfileSettings() {
                 />
             )}
 
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                              Iestatījumi
@@ -208,7 +197,7 @@ export function ProfileSettings() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 w-full md:w-auto"
                     >
                         {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                         Saglabāt izmaiņas
@@ -381,72 +370,59 @@ export function ProfileSettings() {
                             )}
                         </div>
 
-                        {/* GHL Community Level Section */}
-                        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                                    <Trophy size={18} />
+                        {/* Kopienas Līmenis + DAO — compact row */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                                        <Trophy size={18} />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900">Kopienas Līmenis</h3>
                                 </div>
-                                <h3 className="font-bold text-gray-900">GHL Foruma Līmenis</h3>
+                                <span className="px-3 py-1 bg-indigo-100 rounded-full text-xs font-black text-indigo-700">
+                                    Lvl {currentGhlLevel} — {GHL_LEVELS.find(l => l.level === currentGhlLevel)?.title || 'Iesācējs'}
+                                </span>
                             </div>
 
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            {/* Compact level track — single horizontal row */}
+                            <div className="flex gap-1.5 mb-4">
                                 {GHL_LEVELS.map(level => {
                                     const isCurrent = level.level === currentGhlLevel;
                                     const isUnlocked = level.level <= currentGhlLevel;
                                     return (
-                                        <div key={level.level} className={`p-4 rounded-xl border-2 flex flex-col items-center text-center transition-all ${isCurrent ? 'border-indigo-500 bg-indigo-50/30' : isUnlocked ? 'border-emerald-100 bg-white' : 'border-gray-50 bg-gray-50 opacity-50 grayscale'}`}>
-                                            <span className="text-2xl mb-1">{level.emoji}</span>
-                                            <span className={`font-black text-sm ${isCurrent ? 'text-indigo-700' : 'text-gray-900'}`}>Lvl {level.level}</span>
-                                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{level.title}</span>
+                                        <div key={level.level} className={`flex-1 flex flex-col items-center py-2 rounded-lg text-center transition-all ${isCurrent ? 'bg-indigo-100 ring-2 ring-indigo-400' : isUnlocked ? 'bg-emerald-50' : 'bg-gray-50 opacity-40'}`}>
+                                            <span className="text-sm">{level.emoji}</span>
+                                            <span className={`text-[9px] font-black ${isCurrent ? 'text-indigo-700' : 'text-gray-400'}`}>{level.level}</span>
                                         </div>
                                     );
                                 })}
                             </div>
-                        </div>
 
-                        {/* DAO Access Section */}
-                        {currentGhlLevel >= 4 ? (
-                            <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl shadow-sm">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="p-2 rounded-lg bg-white/10 text-yellow-400">
-                                        <Crown size={18} />
+                            {/* DAO inline */}
+                            {currentGhlLevel >= 4 ? (
+                                <div className="flex items-center justify-between p-3 bg-gray-900 rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <Crown size={14} className="text-yellow-400" />
+                                        <span className="text-xs font-bold text-white">100x DAO — piekļuve atvērta</span>
                                     </div>
-                                    <h3 className="font-bold text-white">100x DAO 🔐</h3>
+                                    <button
+                                        onClick={handleDaoJoin}
+                                        disabled={daoLoading}
+                                        className="px-3 py-1.5 bg-white text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all disabled:opacity-50"
+                                    >
+                                        {daoLoading ? <Loader2 className="animate-spin" size={12} /> : 'Telegram →'}
+                                    </button>
                                 </div>
-                                <p className="text-gray-300 text-sm font-semibold mb-1">Ekskluzīva piekļuve DAO biedru grupai</p>
-                                <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                                    Tu esi sasniedzis Lvl 4 — Pētnieks. Apsveicu, tev ir tiesības pievienoties privātajai DAO grupai Telegram.
-                                </p>
-                                <button
-                                    onClick={handleDaoJoin}
-                                    disabled={daoLoading}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-white text-gray-900 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all disabled:opacity-50"
-                                >
-                                    {daoLoading ? <Loader2 className="animate-spin" size={16} /> : <Crown size={16} />}
-                                    Pievienojies DAO Telegram →
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="p-2 rounded-lg bg-gray-100 text-gray-400">
-                                        <Lock size={18} />
+                            ) : (
+                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <Lock size={14} className="text-gray-300" />
+                                        <span className="text-xs font-bold text-gray-400">100x DAO — Lvl 4 nepieciešams</span>
                                     </div>
-                                    <h3 className="font-bold text-gray-900">100x DAO 🔐</h3>
-                                    <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-400 rounded-full text-[10px] font-black uppercase tracking-wider">Slēgts</span>
+                                    <span className="text-[10px] font-black text-gray-300">{currentGhlLevel}/4</span>
                                 </div>
-                                <p className="text-sm font-semibold text-gray-500 mb-4">Nepieciešams: Lvl 4 — Pētnieks 🔍</p>
-                                <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
-                                    <div
-                                        className="bg-indigo-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${Math.min((currentGhlLevel / 4) * 100, 100)}%` }}
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-400 font-semibold mb-3">Tavs līmenis: {currentGhlLevel} / 4</p>
-                                <p className="text-[11px] text-gray-400">Apmeklē GHL forumus un paaugstini savu līmeni</p>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         {/* Display Name + Wallet + Socials */}
                         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">

@@ -138,7 +138,7 @@ export function VibeView({ session, dbProgress, syncProgress }: VibeViewProps) {
     const isSubmitted = alreadySubmitted || submitSuccess;
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#F8FAF9]/50">
+        <div className="flex-1 overflow-y-auto bg-[#F8FAF9]/50 pt-14 md:pt-0">
             {/* Header */}
             <header className="h-16 border-b border-gray-100 bg-white flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">

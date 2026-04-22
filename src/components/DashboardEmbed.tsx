@@ -498,7 +498,7 @@ function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQue
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 space-y-6 md:space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <ForumProgressBar label="AI foruma progress" value={forumProgress?.ai ?? 0} color="#59b687" />
                     {!session && (
@@ -617,7 +617,7 @@ function TredfiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseView
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 space-y-6 md:space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="TradFi foruma progress" value={forumProgress?.tradfi ?? 0} color="#59b687" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#59b687" />
@@ -681,7 +681,7 @@ function DeFiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewPr
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 space-y-6 md:space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="DeFi foruma progress" value={forumProgress?.defi ?? 0} color="#4A9EE5" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#4A9EE5" />
@@ -745,7 +745,7 @@ function CultureView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseVie
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 space-y-6 md:space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <ForumProgressBar label="Kultūras foruma progress" value={forumProgress?.culture ?? 0} color="#F5A623" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#F5A623" />
