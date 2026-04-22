@@ -139,76 +139,105 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account }) {
             if (account?.provider === 'google' && user.email) {
-                const supabase = getSupabase();
-                if (!supabase) {
-                    console.error('❌ [NextAuth] Supabase client is null. Sign-in failed.');
-                    return false;
-                }
-                let ghlContact = await getGHLContactByEmail(user.email);
-                let isSubscribed = false;
-                let userGhlTags: string[] = [];
+                try {
+                    const supabase = getSupabase();
+                    if (!supabase) {
+                        console.error('❌ [NextAuth] Supabase client is null — profile sync skipped');
+                        return true; // Still let the user in
+                    }
 
-                // New user — create contact in GHL so they appear in the pipeline
-                if (!ghlContact) {
-                    ghlContact = await upsertGHLContact(user.email, user.name);
-                }
+                    // GHL sync (fire-and-forget, never blocks login)
+                    let ghlContact = await getGHLContactByEmail(user.email).catch(() => null);
+                    let userGhlTags: string[] = [];
 
-                if (
-                    user.email === '100xviedakomuna@gmail.com' ||
-                    user.email === '100xkomuna@gmail.com'
-                ) {
-                    isSubscribed = true;
-                } else if (ghlContact) {
-                    const tags = ghlContact.tags || [];
-                    userGhlTags = tags;
-                    const normalizedTags = tags.map((t: string) => t.toLowerCase().trim());
-                    const hasSub = normalizedTags.includes(GHL_SUB_TAG.toLowerCase().trim());
-                    const isAdmin =
-                        normalizedTags.includes('admin👑') || normalizedTags.includes('admin 👑');
+                    if (!ghlContact) {
+                        ghlContact = await upsertGHLContact(user.email, user.name).catch(() => null);
+                    }
 
-                    if (hasSub || isAdmin) {
-                        isSubscribed = true;
+                    let ghlEvmFromCrm: string | null = null;
+                    if (ghlContact) {
+                        const tags = ghlContact.tags || [];
+                        userGhlTags = tags;
+                        const normalizedTags = tags.map((t: string) => t.toLowerCase().trim());
                         if (!normalizedTags.includes(GHL_DASHBOARD_TAG.toLowerCase().trim())) {
-                            await addGHLTag(ghlContact.id, GHL_DASHBOARD_TAG);
+                            addGHLTag(ghlContact.id, GHL_DASHBOARD_TAG).catch(() => {});
+                        }
+                        // Pull EVM adrese from CRM if present so we can seed the profile.
+                        const evmField = (ghlContact.customFields || []).find(
+                            (f: any) => f.id === 'DwkIM1fCcBTwQy3nKVsW'
+                        );
+                        const rawEvm = (evmField?.value ?? evmField?.fieldValue ?? '').toString().trim();
+                        if (/^0x[0-9a-fA-F]{40}$/.test(rawEvm)) {
+                            ghlEvmFromCrm = rawEvm;
                         }
                     }
-                }
 
-                const { data: existingProfile } = await supabase
-                    .from('profiles')
-                    .select('socials')
-                    .eq('email', user.email)
-                    .single();
-                const newSocials = {
-                    ...(existingProfile?.socials || {}),
-                    ghl_tags: userGhlTags,
-                };
+                    // Abonements💰 gate: only paid subscribers get full access.
+                    const isSubscriber = userGhlTags.some(
+                        (t: string) => t.toLowerCase().trim() === GHL_SUB_TAG.toLowerCase().trim()
+                    );
 
-                // Generate referral code for new users (6-char alphanumeric)
-                const { data: existingForCode } = await supabase
-                    .from('profiles')
-                    .select('referral_code')
-                    .eq('email', user.email)
-                    .single();
-                const referralCode = existingForCode?.referral_code ||
-                    Math.random().toString(36).substring(2, 8).toUpperCase();
+                    const { data: existingProfile } = await supabase
+                        .from('profiles')
+                        .select('socials, referral_code, evm_address, total_xp')
+                        .eq('email', user.email)
+                        .single();
 
-                const { error } = await supabase.from('profiles').upsert(
-                    {
-                        id: user.id,
-                        email: user.email,
-                        full_name: user.name,
-                        avatar_url: user.image,
-                        is_subscribed: isSubscribed,
-                        socials: newSocials,
-                        referral_code: referralCode,
-                    },
-                    { onConflict: 'email' }
-                );
+                    const newSocials = {
+                        ...(existingProfile?.socials || {}),
+                        ghl_tags: userGhlTags,
+                    };
+                    const referralCode = existingProfile?.referral_code ||
+                        Math.random().toString(36).substring(2, 8).toUpperCase();
 
-                if (error) {
-                    console.error('Error saving user to Supabase:', error);
-                    return false;
+                    // If GHL has an EVM and the profile doesn't, seed it in and award
+                    // the one-time 100 XP (idempotent via xp_claims 'evm_address_added').
+                    const shouldSeedEvm = Boolean(
+                        ghlEvmFromCrm && !existingProfile?.evm_address
+                    );
+                    let seededTotalXp: number | undefined;
+                    let seededLevel: number | undefined;
+                    if (shouldSeedEvm) {
+                        const { data: alreadyClaimed } = await supabase
+                            .from('xp_claims')
+                            .select('task_id')
+                            .eq('user_email', user.email)
+                            .eq('task_id', 'evm_address_added')
+                            .maybeSingle();
+                        if (!alreadyClaimed) {
+                            const base = Number(existingProfile?.total_xp || 0);
+                            seededTotalXp = base + 100;
+                            seededLevel = Math.floor(Math.sqrt(seededTotalXp / 100)) + 1;
+                            await supabase.from('xp_claims').insert({
+                                user_email: user.email,
+                                task_id: 'evm_address_added',
+                                xp_amount: 100,
+                            });
+                        }
+                    }
+
+                    const { error } = await supabase.from('profiles').upsert(
+                        {
+                            id: user.id,
+                            email: user.email,
+                            full_name: user.name,
+                            avatar_url: user.image,
+                            is_subscribed: isSubscriber,
+                            socials: newSocials,
+                            referral_code: referralCode,
+                            ...(shouldSeedEvm ? { evm_address: ghlEvmFromCrm } : {}),
+                            ...(seededTotalXp !== undefined ? { total_xp: seededTotalXp, level: seededLevel } : {}),
+                        },
+                        { onConflict: 'email' }
+                    );
+
+                    if (error) {
+                        console.error('⚠️ [NextAuth] Profile upsert failed:', error.message);
+                        // Don't block login — profile will be created on next visit
+                    }
+                } catch (err) {
+                    console.error('⚠️ [NextAuth] signIn callback error:', err);
+                    // Never block login because of backend sync failures
                 }
             }
             return true;

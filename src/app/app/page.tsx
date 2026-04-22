@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -13,10 +15,12 @@ export default function AppPage() {
     useEffect(() => {
         if (status === "unauthenticated") {
             router.replace("/");
+            return;
         }
-        // @ts-ignore
-        if (status === "authenticated" && !session?.user?.is_subscribed) {
-            router.replace("/");
+        // Non-subscribers → paywall. Subscriber state is set in the NextAuth
+        // session callback from the real GHL `abonements💰` tag.
+        if (status === "authenticated" && (session?.user as any)?.is_subscribed === false) {
+            router.replace("/subscribe");
         }
     }, [status, session, router]);
 
@@ -31,8 +35,7 @@ export default function AppPage() {
         );
     }
 
-    // @ts-ignore
-    if (!session || !session?.user?.is_subscribed) return null;
+    if (!session) return null;
 
     return (
         <Web3Provider>

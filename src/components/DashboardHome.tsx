@@ -322,12 +322,31 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                             <button className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:underline">Visi uzdevumi</button>
                         </div>
                         <div className="space-y-3">
-                            {[
-                                { t: 'Saki GM — saņem +100 XP', c: 'Ik pēc 10h', xp: 100, done: Boolean(gmData?.success) },
-                                { t: 'Pievieno EVM adresi profilā', c: 'Airdrop setup', xp: 100, done: Boolean(profileData?.evm_address) },
-                                { t: 'Aizpildi onboarding anketu', c: 'Profils · +50 XP', xp: 50 },
-                            ].map((task, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-emerald-50 transition-colors group">
+                            {(() => {
+                                // GM is "done" if claimed within the last 10h, not just per React state.
+                                const lastGm = profileData?.last_gm_at ? new Date(profileData.last_gm_at).getTime() : 0;
+                                const gmOnCooldown = Boolean(gmData?.success) || (lastGm > 0 && Date.now() - lastGm < 10 * 60 * 60 * 1000);
+                                // Onboarding counts as done if the profile has the flag OR they already
+                                // have goals/skill_level filled (legacy rows without the flag).
+                                const onboardingDone = Boolean(
+                                    profileData?.onboarding_complete ||
+                                    (profileData?.goals && profileData.goals.length > 0) ||
+                                    profileData?.skill_level
+                                );
+                                return [
+                                    { t: 'Saki GM — saņem +100 XP', c: 'Ik pēc 10h', xp: 100, done: gmOnCooldown },
+                                    { t: 'Pievieno EVM adresi profilā', c: 'Airdrop setup', xp: 100, done: Boolean(profileData?.evm_address) },
+                                    { t: 'Aizpildi onboarding anketu', c: 'Profils · +50 XP', xp: 50, done: onboardingDone },
+                                ];
+                            })().map((task, i) => (
+                                <div
+                                    key={i}
+                                    className={`flex items-center justify-between p-4 rounded-2xl transition-colors group ${
+                                        task.done
+                                            ? 'bg-gray-50/50 opacity-60'
+                                            : 'bg-gray-50 hover:bg-emerald-50'
+                                    }`}
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${task.done ? 'bg-emerald-500 text-white' : 'bg-white text-gray-400 border border-gray-200'}`}>
                                             {task.done ? <CheckCircle2 size={16} /> : <Zap size={16} className="group-hover:text-emerald-500" />}
@@ -337,7 +356,11 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{task.c}</p>
                                         </div>
                                     </div>
-                                    {!task.done && <span className="text-[10px] font-black text-amber-500">+{task.xp} XP</span>}
+                                    {task.done ? (
+                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Iegūts</span>
+                                    ) : (
+                                        <span className="text-[10px] font-black text-amber-500">+{task.xp} XP</span>
+                                    )}
                                 </div>
                             ))}
                         </div>
