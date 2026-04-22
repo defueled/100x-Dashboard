@@ -56,6 +56,7 @@ import { LevelUpModal } from './gamification/LevelUpModal';
 import { OnboardingWizard } from './OnboardingWizard';
 import { LeaderboardView } from './LeaderboardView';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
+import { ThemeToggle } from './ThemeToggle';
 
 // Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
 const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
@@ -339,12 +340,12 @@ interface BaseViewProps {
 export function ForumProgressBar({ label, value, color }: { label: string; value: number; color: string }) {
     const clamped = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
     return (
-        <div className="mb-6 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+        <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[var(--color-dark-surface)] border border-gray-100 dark:border-[var(--color-dark-border)] shadow-sm">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
-                <span className="text-xs font-black text-gray-900">{clamped}%</span>
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</span>
+                <span className="text-xs font-black text-gray-900 dark:text-gray-100">{clamped}%</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-100 dark:bg-[var(--color-dark-border)] rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: `${clamped}%`, backgroundColor: color }} />
             </div>
         </div>
@@ -485,7 +486,7 @@ function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQue
 
     return (
         <>
-            <header className="h-16 border-b border-gray-100 bg-white flex items-center justify-between px-8 shrink-0">
+            <header className="h-16 border-b border-gray-100 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-surface)] flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#59b687]/10"><Bot size={18} className="text-[#59b687]" /></div>
                     <h1 className="text-lg font-bold">AI Iesācēja Ceļš</h1>
@@ -496,7 +497,7 @@ function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQue
                     <span className="font-bold">{totalXp} XP</span>
                 </div>
             </header>
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <ForumProgressBar label="AI foruma progress" value={forumProgress?.ai ?? 0} color="#59b687" />
                     {!session && (
@@ -604,7 +605,7 @@ function TredfiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseView
 
     return (
         <>
-            <header className="h-16 border-b border-gray-100 bg-white flex items-center justify-between px-8 shrink-0">
+            <header className="h-16 border-b border-gray-100 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-surface)] flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#59b687]/10"><TrendingUp size={18} className="text-[#59b687]" /></div>
                     <h1 className="text-lg font-bold">Tredfi Arena</h1>
@@ -668,7 +669,7 @@ function DeFiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewPr
 
     return (
         <>
-            <header className="h-16 border-b border-gray-100 bg-white flex items-center justify-between px-8 shrink-0">
+            <header className="h-16 border-b border-gray-100 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-surface)] flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#4A9EE5]/10"><Landmark size={18} className="text-[#4A9EE5]" /></div>
                     <h1 className="text-lg font-bold">DeFi Dungeon</h1>
@@ -732,7 +733,7 @@ function CultureView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseVie
 
     return (
         <>
-            <header className="h-16 border-b border-gray-100 bg-white flex items-center justify-between px-8 shrink-0">
+            <header className="h-16 border-b border-gray-100 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-surface)] flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#F5A623]/10"><Palette size={18} className="text-[#F5A623]" /></div>
                     <h1 className="text-lg font-bold">Culture Guild</h1>
@@ -920,7 +921,7 @@ export function DashboardEmbed() {
                 />
             )}
             {/* ... sidebar 1 */}
-            <aside className="w-16 bg-white border-r border-gray-100 flex flex-col items-center py-6 gap-1 shrink-0">
+            <aside className="w-16 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex flex-col items-center py-6 gap-1 shrink-0">
                 <div className="mb-6 flex items-center justify-center">
                     <Image src="/assets/logos/100x-refined-logo.png" alt="100x" width={36} height={36} className="w-9 h-auto" />
                 </div>
@@ -943,7 +944,7 @@ export function DashboardEmbed() {
             </aside>
 
             {/* Expanded Sidebar */}
-            <aside className="w-72 bg-white border-r border-gray-100 flex flex-col shrink-0">
+            <aside className="w-72 bg-white dark:bg-[var(--color-dark-surface)] border-r border-gray-100 dark:border-[var(--color-dark-border)] flex flex-col shrink-0">
                 <div className="p-6 pb-4">
                     <div className="flex items-center gap-3 mb-5">
                         <div className="relative">
@@ -988,7 +989,7 @@ export function DashboardEmbed() {
                             >
                                 <Users size={16} />
                             </button>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-300 transition-all"><Moon size={16} /></button>
+                            <ThemeToggle />
                         </div>
                     </div>
                     <div className="flex gap-2">

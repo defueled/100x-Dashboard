@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-background: #F8FAF9;
   --color-foreground: #000000;
+  --color-dark-bg: #0f1319;
+  --color-dark-surface: #171b22;
+  --color-dark-border: #252a33;
+  --color-dark-muted: #9ba3b0;
   --color-brand-blue: #188bf6;
   --color-brand-green: #59b687;
   --color-brand-orange: #f6ad55;
@@ -60,6 +66,40 @@
   }
 
   --animate-float-delayed: float-reverse 18s ease-in-out infinite;
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+  }
+
+  --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
+
+  @keyframes shimmer-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  --animate-shimmer-sweep: shimmer-sweep 2s ease-in-out;
+
+  @keyframes marquee-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }
+  }
+
+  @keyframes marquee-right {
+    0% { transform: translateX(-33.333%); }
+    100% { transform: translateX(0); }
+  }
+
+  --animate-marquee-left: marquee-left linear infinite;
+  --animate-marquee-right: marquee-right linear infinite;
+
+  @keyframes logo-color-pulse {
+    0%, 80%, 100% { filter: grayscale(100%); opacity: 0.35; }
+    87%, 93% { filter: grayscale(0%); opacity: 0.85; transform: scale(1.12); }
+  }
+
+  --animate-logo-pulse: logo-color-pulse ease-in-out infinite;
 }
 
 @layer utilities {
@@ -87,6 +127,22 @@
   .animate-float-delayed {
     animation: var(--animate-float-delayed);
   }
+
+  .animate-pulse-slow {
+    animation: var(--animate-pulse-slow);
+  }
+
+  .animate-marquee-left {
+    animation: var(--animate-marquee-left);
+  }
+
+  .animate-marquee-right {
+    animation: var(--animate-marquee-right);
+  }
+
+  .animate-logo-pulse {
+    animation: var(--animate-logo-pulse);
+  }
 }
 
 @layer components {
@@ -113,9 +169,15 @@
     -moz-osx-font-smoothing: grayscale;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   body::-webkit-scrollbar {
     display: none;
+  }
+
+  .dark body {
+    background-color: var(--color-dark-bg);
+    color: #e5e7eb;
   }
 }
