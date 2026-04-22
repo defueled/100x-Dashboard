@@ -1,6 +1,6 @@
 {
   "alias": ["100x-dashboard.vercel.app"],
   "crons": [
-    { "path": "/api/admin/ghl-sync", "schedule": "0 */6 * * *" }
+    { "path": "/api/admin/ghl-sync", "schedule": "0 5 * * *" }
   ]
 }
