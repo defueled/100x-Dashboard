@@ -205,7 +205,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                     <span className="flex items-center gap-1 text-xs font-bold text-emerald-100"><Flame size={12} /> {displayMultiplier}</span>
                                 </div>
                                 <h2 className="text-4xl font-black mb-4 uppercase italic tracking-tighter">
-                                    {isClaimedToday ? 'GM iekasēts šodien! ✅' : `Saki GM, saņem +${gmData?.xpCount ?? 100} XP!`}
+                                    {isClaimedToday ? 'GM iekasēts šodien!' : `Saki GM, saņem +${gmData?.xpCount ?? 100} XP!`}
                                 </h2>
                                 <p className="text-sm text-emerald-50/80 mb-8 max-w-xs font-medium">
                                     {isClaimedToday
@@ -234,7 +234,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                         isClaimedToday ? 'bg-white/30 text-white/80' : 'bg-white text-emerald-600 hover:bg-emerald-50'
                                     }`}
                                 >
-                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'IEKASĒTS ŠODIEN ✅' : 'Iesākt dienu (GM)'}
+                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'IEKASĒTS ŠODIEN' : 'Iesākt dienu (GM)'}
                                 </button>
                                 {isClaimedToday && (
                                     <div className="flex items-center justify-center gap-2 text-white/70 text-sm font-bold">
