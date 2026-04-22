@@ -20,7 +20,7 @@ export async function GET(): Promise<NextResponse> {
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, total_xp, gm_streak')
+        .select('*')
         .order('total_xp', { ascending: false })
         .limit(20);
 
@@ -29,14 +29,24 @@ export async function GET(): Promise<NextResponse> {
         return NextResponse.json({ members: [], error: error.message });
     }
 
-    const members = (data || []).map((m, i) => ({
-        rank: i + 1,
-        name: m.display_name || 'Anonymous',
-        avatar: null,
-        xp: m.total_xp || 0,
-        streak: m.gm_streak || 0,
-        level: Math.floor(Math.sqrt((m.total_xp || 0) / 100)) + 1,
-    }));
+    const members = (data || []).map((m: Record<string, unknown>, i) => {
+        const xp = Number(m.total_xp ?? 0);
+        const streak = Number(m.gm_streak ?? m.streak ?? 0);
+        const name =
+            (m.display_name as string) ||
+            (m.full_name as string) ||
+            (m.name as string) ||
+            ((m.email as string)?.split('@')[0]) ||
+            'Anonymous';
+        return {
+            rank: i + 1,
+            name,
+            avatar: (m.avatar_url as string) || (m.avatar as string) || null,
+            xp,
+            streak,
+            level: Math.floor(Math.sqrt(xp / 100)) + 1,
+        };
+    });
 
     cache = { data: members, ts: Date.now() };
     console.log(`[Leaderboard] Fetched ${members.length} members`);
