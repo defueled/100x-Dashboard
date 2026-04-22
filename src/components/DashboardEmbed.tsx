@@ -333,9 +333,25 @@ interface BaseViewProps {
     totalXp: number;
     currentLevel: number;
     ghlLevel: number;
+    forumProgress?: { ai?: number; defi?: number; tradfi?: number; culture?: number };
 }
 
-function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQuestProgressValue, totalXp, currentLevel, ghlLevel }: BaseViewProps) {
+export function ForumProgressBar({ label, value, color }: { label: string; value: number; color: string }) {
+    const clamped = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+    return (
+        <div className="mb-6 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+                <span className="text-xs font-black text-gray-900">{clamped}%</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${clamped}%`, backgroundColor: color }} />
+            </div>
+        </div>
+    );
+}
+
+function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQuestProgressValue, totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewProps) {
     const [expandedTitle, setExpandedTitle] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState<string | null>(null);
 
@@ -482,6 +498,7 @@ function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQue
             </header>
             <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#F8FAF9]/50">
                 <div className="max-w-4xl mx-auto space-y-6">
+                    <ForumProgressBar label="AI foruma progress" value={forumProgress?.ai ?? 0} color="#59b687" />
                     {!session && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -557,7 +574,7 @@ function AIView({ session, dbProgress = [], syncProgress, getQuestStatus, getQue
 }
 
 // ─── TREDFI VIEW ────────────────────────────────────────────
-function TredfiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
+function TredfiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewProps) {
     const mainQuests: Quest[] = [
         { title: 'Tirgus Mednieks', desc: 'Veiksmīgi identificē 5 tirdzniecības signālus', xp: 600, status: 'active', progress: 0, icon: Crosshair, color: '#59b687' },
         { title: 'Riska Menedžeris', desc: 'Izveido un ievēro savu riska vadības plānu', xp: 800, status: 'locked', progress: 0, icon: Shield, color: '#E74C3C' },
@@ -599,6 +616,7 @@ function TredfiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
                 </div>
             </header>
             <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                <ForumProgressBar label="TradFi foruma progress" value={forumProgress?.tradfi ?? 0} color="#59b687" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#59b687" />
                     <div className="grid grid-cols-2 gap-4">
@@ -620,7 +638,7 @@ function TredfiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
 }
 
 // ─── DEFI VIEW ──────────────────────────────────────────────
-function DeFiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
+function DeFiView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewProps) {
     const mainQuests: Quest[] = [
         { title: 'DeFi Pētnieks', desc: 'Izpēti 5 dažādus DeFi protokolus', xp: 500, status: 'active', progress: 0, icon: Globe, color: '#4A9EE5' },
         { title: 'Yield Farmers', desc: 'Saprot yield farming un iemācies stratēģijas', xp: 900, status: 'locked', progress: 0, icon: Coins, color: '#F5A623' },
@@ -662,6 +680,7 @@ function DeFiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
                 </div>
             </header>
             <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                <ForumProgressBar label="DeFi foruma progress" value={forumProgress?.defi ?? 0} color="#4A9EE5" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#4A9EE5" />
                     <div className="grid grid-cols-2 gap-4">
@@ -683,7 +702,7 @@ function DeFiView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
 }
 
 // ─── CULTURE VIEW ───────────────────────────────────────────
-function CultureView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
+function CultureView({ totalXp, currentLevel, ghlLevel, forumProgress }: BaseViewProps) {
     const mainQuests: Quest[] = [
         { title: 'Kopienas Līderis', desc: 'Piedalies 10 kopienas diskusijās un palīdzi citiem', xp: 700, status: 'active', progress: 0, icon: Crown, color: '#F5A623' },
         { title: 'Satura Veidotājs', desc: 'Izveido un publicē 3 oriģinālus ierakstus', xp: 1000, status: 'locked', progress: 0, icon: Rocket, color: '#E74C3C' },
@@ -725,6 +744,7 @@ function CultureView({ totalXp, currentLevel, ghlLevel }: BaseViewProps) {
                 </div>
             </header>
             <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                <ForumProgressBar label="Kultūras foruma progress" value={forumProgress?.culture ?? 0} color="#F5A623" />
                 <div>
                     <SectionHeader icon={Crown} title="Galvenie Kvesti" count={mainQuests.length + 1} color="#F5A623" />
                     <div className="grid grid-cols-2 gap-4">
@@ -768,30 +788,20 @@ export function DashboardEmbed() {
     const fetchProgress = useCallback(async () => {
         if (!session?.user?.email) return;
 
-        // Fetch from all necessary tables
-        const [progressRes, claimsRes, profileRes] = await Promise.all([
-            supabase.from('user_progress').select('*').eq('user_email', session.user.email),
-            supabase.from('xp_claims').select('*').eq('user_email', session.user.email),
-            supabase.from('profiles').select('gm_streak, total_xp, onboarding_complete, display_name, evm_address, last_gm_at').eq('email', session.user.email).single()
-        ]);
+        try {
+            const res = await fetch('/api/progress');
+            if (!res.ok) return;
+            const data = await res.json();
 
-        const combinedProgress = [
-            ...(progressRes.data || []),
-            ...(claimsRes.data || []).map(c => ({
-                id: c.id,
-                quest_id: c.task_id,
-                xp_earned: c.xp_amount,
-                status: 'completed',
-                progress: 100
-            }))
-        ];
-
-        setDbProgress(combinedProgress);
-        if (profileRes.data) {
-            setProfileData(profileRes.data);
-            if (!profileRes.data.onboarding_complete) {
-                setShowOnboarding(true);
+            setDbProgress(data.progress || []);
+            if (data.profile) {
+                setProfileData(data.profile);
+                if (!data.profile.onboarding_complete) {
+                    setShowOnboarding(true);
+                }
             }
+        } catch (err) {
+            console.error('[Dashboard] Failed to fetch progress:', err);
         }
     }, [session]);
 
@@ -806,9 +816,17 @@ export function DashboardEmbed() {
         void fetch('/api/referral/process', { method: 'POST' });
     }, [session?.user?.email]);
 
-    const totalXp = dbProgress.reduce((sum: number, p: any) => sum + (p.xp_earned || 0), 0);
+    // Use profile's total_xp as authoritative source (GM API updates it directly)
+    // Fall back to summing xp_claims if profile not loaded yet
+    const totalXp = profileData?.total_xp || dbProgress.reduce((sum: number, p: any) => sum + (p.xp_earned || 0), 0);
     const currentLevel = calculateLevel(totalXp);
-    const ghlLevel = getGhlLevelFromTags((session?.user as any)?.ghl_tags || []);
+    const ghlLevel = profileData?.ghl_level ?? getGhlLevelFromTags((session?.user as any)?.ghl_tags || []);
+    const forumProgress = {
+        ai: profileData?.ai_progress ?? 0,
+        defi: profileData?.defi_progress ?? 0,
+        tradfi: profileData?.tradfi_progress ?? 0,
+        culture: profileData?.culture_progress ?? 0,
+    };
     const completedQuestsCount = dbProgress.filter(p => p.status === 'completed').length;
 
     // GHL abonement bonus added to the season multiplier.
@@ -827,7 +845,7 @@ export function DashboardEmbed() {
     const dynamicStats = [
         { value: (totalXp || 0).toLocaleString(), label: 'XP', icon: '⚡' },
         { value: (completedQuestsCount || 0).toString(), label: 'TASKS', icon: '✓' },
-        { value: `${seasonMultiplier}x`, label: 'MULTIPLIER', icon: '🚀' },
+        { value: `${seasonMultiplier}x`, label: 'REIZINĀTĀJS', icon: '🚀' },
     ];
 
     // Update quest status based on DB
@@ -1091,15 +1109,16 @@ export function DashboardEmbed() {
                         totalXp={totalXp}
                         currentLevel={currentLevel}
                         ghlLevel={ghlLevel}
+                        forumProgress={forumProgress}
                     />
                 )}
-                {activeView === 'tredfi' && <TredfiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />}
+                {activeView === 'tredfi' && <TredfiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />}
                 {activeView === 'defi' && (
                     <TokenGate evmAddress={profileData?.evm_address} minBalance={1} featureName="DeFi Dungeon">
-                        <DeFiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />
+                        <DeFiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
                     </TokenGate>
                 )}
-                {activeView === 'culture' && <CultureView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} />}
+                {activeView === 'culture' && <CultureView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />}
                 {activeView === 'calendar' && <CalendarView />}
                 {activeView === 'profile' && <ProfileSettings />}
                 {activeView === 'news' && <NewsView initialCategory="ai" />}
