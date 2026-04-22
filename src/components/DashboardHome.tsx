@@ -33,9 +33,9 @@ function NewsPreviewCard() {
                     <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
                         <Newspaper size={18} className="text-orange-500" />
                     </div>
-                    <h3 className="text-lg font-black text-gray-900">Mintiņš Ziņas</h3>
+                    <h3 className="text-lg font-black text-gray-900">100x Ekosistēma</h3>
                 </div>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI · Live</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Base · Web3 · Live</span>
             </div>
             <div className="space-y-3">
                 {loading ? (
@@ -62,6 +62,36 @@ function NewsPreviewCard() {
     );
 }
 
+// Flying stars particle effect
+function FlyingStars() {
+    const stars = Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 16) * 360;
+        const distance = 80 + Math.random() * 120;
+        const x = Math.cos((angle * Math.PI) / 180) * distance;
+        const y = Math.sin((angle * Math.PI) / 180) * distance;
+        const delay = Math.random() * 0.2;
+        const size = 6 + Math.random() * 10;
+        return { x, y, delay, size, id: i };
+    });
+
+    return (
+        <div className="absolute inset-0 pointer-events-none z-20 overflow-visible">
+            {stars.map(s => (
+                <motion.div
+                    key={s.id}
+                    initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                    animate={{ opacity: 0, x: s.x, y: s.y, scale: 0 }}
+                    transition={{ duration: 0.8, delay: s.delay, ease: 'easeOut' }}
+                    className="absolute left-1/2 top-1/2"
+                    style={{ fontSize: s.size }}
+                >
+                    ⭐
+                </motion.div>
+            ))}
+        </div>
+    );
+}
+
 interface DashboardHomeProps {
     session: any;
     dbProgress: any[];
@@ -74,9 +104,11 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     const [gmLoading, setGmLoading] = useState(false);
     const [gmData, setGmData] = useState<any>(null);
     const [countdown, setCountdown] = useState('');
+    const [showStars, setShowStars] = useState(false);
+    const [alreadyClaimedMsg, setAlreadyClaimedMsg] = useState(false);
 
     const displayMultiplier = `${seasonMultiplier}x`;
-    const totalXp = dbProgress.reduce((sum, p) => sum + (p.xp_earned || p.xp_amount || 0), 0);
+    const totalXp = profileData?.total_xp || dbProgress.reduce((sum, p) => sum + (p.xp_earned || p.xp_amount || 0), 0);
 
     // True if user already claimed GM today (from DB on load, or from this session)
     const isClaimedToday = gmData?.success || (() => {
@@ -107,13 +139,24 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     }, []);
 
     const handleGm = async () => {
+        // If already claimed, show message instead of hitting API
+        if (isClaimedToday) {
+            setAlreadyClaimedMsg(true);
+            setTimeout(() => setAlreadyClaimedMsg(false), 3000);
+            return;
+        }
         setGmLoading(true);
         try {
             const res = await fetch('/api/gm/claim', { method: 'POST' });
             const data = await res.json();
             if (data.success) {
                 setGmData(data);
+                setShowStars(true);
+                setTimeout(() => setShowStars(false), 1200);
                 await onGmClaim();
+            } else if (data.error === 'Already claimed today') {
+                setAlreadyClaimedMsg(true);
+                setTimeout(() => setAlreadyClaimedMsg(false), 3000);
             }
         } finally {
             setGmLoading(false);
@@ -132,7 +175,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                            Veseļi, {session?.user?.name?.split(' ')[0]}! 🚀
+                            Sveiks, {session?.user?.name?.split(' ')[0]}! 🚀
                         </h1>
                         <p className="text-sm text-gray-400 font-medium">Tavs šīsdienas progress.</p>
                     </div>
@@ -151,30 +194,47 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                     {/* GM WIDGET */}
                     <motion.div
                         whileHover={{ scale: 1.01 }}
-                        className="md:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-200 relative overflow-hidden"
+                        animate={gmData?.success ? { scale: [1, 1.02, 1] } : {}}
+                        transition={{ duration: 0.4 }}
+                        className="md:col-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-200 relative"
                     >
                         <div className="relative z-10 flex flex-col h-full justify-between">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">Sezonas Reizinātājs</span>
+                                    <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">Airdrop Reizinātājs</span>
                                     <span className="flex items-center gap-1 text-xs font-bold text-emerald-100"><Flame size={12} /> {displayMultiplier}</span>
                                 </div>
                                 <h2 className="text-4xl font-black mb-4 uppercase italic tracking-tighter">
-                                    Saki GM, saņem +{gmData?.xpCount ?? 100} XP!
+                                    {isClaimedToday ? 'GM iekasēts šodien! ✅' : `Saki GM, saņem +${gmData?.xpCount ?? 100} XP!`}
                                 </h2>
                                 <p className="text-sm text-emerald-50/80 mb-8 max-w-xs font-medium">
-                                    Ienāc katru dienu. Pašlaik: <strong>{displayMultiplier}</strong> sezonas reizinātājs.
+                                    {isClaimedToday
+                                        ? <>Streak: <strong>{gmData?.streak ?? profileData?.gm_streak ?? 0} dienas</strong> · Reizinātājs: <strong>{displayMultiplier}</strong></>
+                                        : <>Ienāc katru dienu. Pašlaik: <strong>{displayMultiplier}</strong> airdrop reizinātājs.</>
+                                    }
                                 </p>
+
+                                {/* XP celebration banner */}
+                                {gmData?.success && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        className="mb-4 px-5 py-3 bg-white/20 rounded-2xl backdrop-blur-sm text-center"
+                                    >
+                                        <p className="text-2xl font-black">+{gmData.xpCount ?? 100} XP</p>
+                                        <p className="text-xs font-bold text-emerald-100">Streak: {gmData.streak} dienas · {gmData.multiplier} reizinātājs</p>
+                                    </motion.div>
+                                )}
                             </div>
                             <div className="space-y-3">
                                 <button
                                     onClick={handleGm}
-                                    disabled={gmLoading || isClaimedToday}
+                                    disabled={gmLoading}
                                     className={`w-full py-5 rounded-2xl font-black text-lg transition-all transform active:scale-95 shadow-lg ${
-                                        isClaimedToday ? 'bg-white/30 cursor-default' : 'bg-white text-emerald-600 hover:bg-emerald-50'
+                                        isClaimedToday ? 'bg-white/30 text-white/80' : 'bg-white text-emerald-600 hover:bg-emerald-50'
                                     }`}
                                 >
-                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'GM NOSŪTĪTS! ✅' : 'Iesākt dienu (GM)'}
+                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'IEKASĒTS ŠODIEN ✅' : 'Iesākt dienu (GM)'}
                                 </button>
                                 {isClaimedToday && (
                                     <div className="flex items-center justify-center gap-2 text-white/70 text-sm font-bold">
@@ -184,6 +244,23 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                 )}
                             </div>
                         </div>
+                        {/* Flying stars on claim */}
+                        {showStars && <FlyingStars />}
+
+                        {/* Already claimed toast */}
+                        {alreadyClaimedMsg && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg"
+                            >
+                                <p className="text-xs font-bold text-gray-700 whitespace-nowrap">
+                                    Jau iekasēts šodien! Nākamais pēc {countdown} ⏰
+                                </p>
+                            </motion.div>
+                        )}
+
                         <Zap size={200} className="absolute -right-20 -bottom-20 text-white/10 rotate-12" />
                         <Sparkles size={100} className="absolute right-10 top-10 text-white/10" />
                     </motion.div>

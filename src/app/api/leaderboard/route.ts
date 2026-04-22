@@ -20,22 +20,22 @@ export async function GET(): Promise<NextResponse> {
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, full_name, avatar_url, total_xp, gm_streak, level')
+        .select('display_name, total_xp, gm_streak')
         .order('total_xp', { ascending: false })
         .limit(20);
 
     if (error) {
         console.error('[Leaderboard] Supabase error:', error.message);
-        return NextResponse.json({ members: [] });
+        return NextResponse.json({ members: [], error: error.message });
     }
 
     const members = (data || []).map((m, i) => ({
         rank: i + 1,
-        name: m.display_name || m.full_name || 'Anonomous',
-        avatar: m.avatar_url || null,
+        name: m.display_name || 'Anonymous',
+        avatar: null,
         xp: m.total_xp || 0,
         streak: m.gm_streak || 0,
-        level: m.level || 1,
+        level: Math.floor(Math.sqrt((m.total_xp || 0) / 100)) + 1,
     }));
 
     cache = { data: members, ts: Date.now() };
