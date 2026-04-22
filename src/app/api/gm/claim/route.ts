@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { syncUserToGHL } from '@/lib/ghlSync';
+
+// Service-role client — anon-keyed client silently no-ops UPDATE under RLS
+// and makes GM claims look successful without actually changing the row.
+function getSupabase() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+}
 
 export async function POST(req: Request) {
     try {
@@ -12,6 +21,7 @@ export async function POST(req: Request) {
         }
 
         const email = session.user.email;
+        const supabase = getSupabase();
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
