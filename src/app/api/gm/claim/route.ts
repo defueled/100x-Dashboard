@@ -23,7 +23,12 @@ export async function POST(req: Request) {
         const email = session.user.email;
         const supabase = getSupabase();
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        // GM cooldown: 10 hours between claims. Streak still increments per
+        // claim (not per calendar day), capped at 100.
+        const COOLDOWN_MS = 10 * 60 * 60 * 1000;
+        // Streak window: claim within 2× cooldown to keep streak alive.
+        const STREAK_WINDOW_MS = 2 * COOLDOWN_MS;
 
         // 1. Get current profile
         const { data: profile, error: pError } = await supabase
@@ -36,18 +41,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 
-        const lastGm = profile.last_gm_at ? new Date(profile.last_gm_at) : null;
-        const lastGmDate = lastGm ? new Date(lastGm.getFullYear(), lastGm.getMonth(), lastGm.getDate()).getTime() : 0;
+        const lastGmMs = profile.last_gm_at ? new Date(profile.last_gm_at).getTime() : 0;
+        const sinceLast = lastGmMs ? now.getTime() - lastGmMs : Infinity;
 
-        // Check if already claimed today
-        if (lastGmDate === today) {
-            return NextResponse.json({ error: 'Already claimed today' }, { status: 400 });
+        if (sinceLast < COOLDOWN_MS) {
+            const nextAt = new Date(lastGmMs + COOLDOWN_MS).toISOString();
+            return NextResponse.json({ error: 'Cooldown active', nextAt }, { status: 400 });
         }
 
-        // 2. Calculate new streak
-        const yesterday = today - (24 * 60 * 60 * 1000);
+        // 2. Calculate new streak — +1 if claim lands within the streak window,
+        //    reset to 1 if the window lapsed.
         let newStreak = 1;
-        if (lastGmDate === yesterday) {
+        if (lastGmMs && sinceLast <= STREAK_WINDOW_MS) {
             newStreak = (profile.gm_streak || 0) + 1;
         }
 
@@ -78,10 +83,10 @@ export async function POST(req: Request) {
         const newLevel = Math.floor(Math.sqrt(newTotalXp / 100)) + 1;
         void syncUserToGHL(email, { total_xp: newTotalXp, gm_streak: newStreak, level: newLevel });
 
-        // 5. Record claim in xp_claims (with unique daily ID)
-        const dayString = now.toISOString().split('T')[0];
-        const taskId = `daily_gm_${dayString}`;
-        
+        // 5. Record claim in xp_claims. Use timestamped ID so a user can
+        //    have multiple GM rows per day under the 10h cooldown.
+        const taskId = `gm_${now.toISOString()}`;
+
         await supabase
             .from('xp_claims')
             .insert({
@@ -94,6 +99,7 @@ export async function POST(req: Request) {
             success: true,
             xpCount: totalXpAwarded,
             streak: newStreak,
+            lastGmAt: now.toISOString(),
             multiplier: `${multiplier}x`
         });
 

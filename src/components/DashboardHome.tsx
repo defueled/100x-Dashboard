@@ -110,24 +110,21 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     const displayMultiplier = `${seasonMultiplier}x`;
     const totalXp = profileData?.total_xp || dbProgress.reduce((sum, p) => sum + (p.xp_earned || p.xp_amount || 0), 0);
 
-    // True if user already claimed GM today (from DB on load, or from this session)
-    const isClaimedToday = gmData?.success || (() => {
-        const lastGm = profileData?.last_gm_at;
-        if (!lastGm) return false;
-        const last = new Date(lastGm);
-        const now = new Date();
-        return last.getFullYear() === now.getFullYear() &&
-            last.getMonth() === now.getMonth() &&
-            last.getDate() === now.getDate();
+    // GM cooldown: 10 hours since last claim (not calendar day).
+    const GM_COOLDOWN_MS = 10 * 60 * 60 * 1000;
+    const lastGmMs = (() => {
+        if (gmData?.lastGmAt) return new Date(gmData.lastGmAt).getTime();
+        if (profileData?.last_gm_at) return new Date(profileData.last_gm_at).getTime();
+        return 0;
     })();
+    const isClaimedToday = Boolean(gmData?.success) || (lastGmMs > 0 && Date.now() - lastGmMs < GM_COOLDOWN_MS);
 
-    // Live countdown to midnight (next GM reset)
+    // Live countdown to next GM window (last_gm_at + 10h).
     useEffect(() => {
         const tick = () => {
-            const now = new Date();
-            const midnight = new Date(now);
-            midnight.setHours(24, 0, 0, 0);
-            const diff = midnight.getTime() - now.getTime();
+            if (!lastGmMs) { setCountdown(''); return; }
+            const diff = lastGmMs + GM_COOLDOWN_MS - Date.now();
+            if (diff <= 0) { setCountdown('00:00:00'); return; }
             const h = Math.floor(diff / 3_600_000);
             const m = Math.floor((diff % 3_600_000) / 60_000);
             const s = Math.floor((diff % 60_000) / 1_000);
@@ -136,7 +133,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
         tick();
         const id = setInterval(tick, 1_000);
         return () => clearInterval(id);
-    }, []);
+    }, [lastGmMs, GM_COOLDOWN_MS]);
 
     const handleGm = async () => {
         // If already claimed, show message instead of hitting API
@@ -205,7 +202,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                     <span className="flex items-center gap-1 text-xs font-bold text-emerald-100"><Flame size={12} /> {displayMultiplier}</span>
                                 </div>
                                 <h2 className="text-4xl font-black mb-4 uppercase italic tracking-tighter">
-                                    {isClaimedToday ? 'GM iekasēts šodien!' : `Saki GM, saņem +${gmData?.xpCount ?? 100} XP!`}
+                                    {isClaimedToday ? 'GM iekasēts!' : `Saki GM, saņem +${gmData?.xpCount ?? 100} XP!`}
                                 </h2>
                                 <p className="text-sm text-emerald-50/80 mb-8 max-w-xs font-medium">
                                     {isClaimedToday
@@ -234,7 +231,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                         isClaimedToday ? 'bg-white/30 text-white/80' : 'bg-white text-emerald-600 hover:bg-emerald-50'
                                     }`}
                                 >
-                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'IEKASĒTS ŠODIEN' : 'Iesākt dienu (GM)'}
+                                    {gmLoading ? 'SINHRONIZĒ...' : isClaimedToday ? 'IEKASĒTS' : 'Iesākt dienu (GM)'}
                                 </button>
                                 {isClaimedToday && (
                                     <div className="flex items-center justify-center gap-2 text-white/70 text-sm font-bold">
@@ -256,7 +253,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                 className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-5 py-2.5 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg"
                             >
                                 <p className="text-xs font-bold text-gray-700 whitespace-nowrap">
-                                    Jau iekasēts šodien! Nākamais pēc {countdown} ⏰
+                                    Jau iekasēts! Nākamais pēc {countdown}
                                 </p>
                             </motion.div>
                         )}
@@ -326,7 +323,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                         </div>
                         <div className="space-y-3">
                             {[
-                                { t: 'Saki GM — saņem +100 XP', c: 'Ikdienas ieradums', xp: 100, done: Boolean(gmData?.success) },
+                                { t: 'Saki GM — saņem +100 XP', c: 'Ik pēc 10h', xp: 100, done: Boolean(gmData?.success) },
                                 { t: 'Pievieno EVM adresi profilā', c: 'Airdrop setup', xp: 100, done: Boolean(profileData?.evm_address) },
                                 { t: 'Aizpildi onboarding anketu', c: 'Profils · +50 XP', xp: 50 },
                             ].map((task, i) => (
