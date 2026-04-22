@@ -123,10 +123,10 @@ const SECTION_NAV: Record<SectionId, { label: string; items: SectionNavItem[] }>
 
 // Kopiena forums — swap in real URLs when ready
 const KOPIENA_FORUMS = [
-    { label: 'AI Forums', url: 'https://community.100x.lv' },
-    { label: 'TradFi Forums', url: 'https://community.100x.lv' },
-    { label: 'DeFi Forums', url: 'https://community.100x.lv' },
-    { label: 'Culture Forums', url: 'https://community.100x.lv' },
+    { label: 'AI Forums', url: 'https://platforma.100x.lv/communities/groups/aii/home' },
+    { label: 'TradFi Forums', url: 'https://platforma.100x.lv/communities/groups/tradfi/home' },
+    { label: 'DeFi Forums', url: 'https://platforma.100x.lv/communities/groups/defi/home' },
+    { label: 'Culture Forums', url: 'https://platforma.100x.lv/communities/groups/kultura/home' },
 ];
 
 const iconSidebarItems: { icon: React.ElementType; label: string; id: SectionId; defaultView: ViewId }[] = [
