@@ -180,4 +180,28 @@
     background-color: var(--color-dark-bg);
     color: #e5e7eb;
   }
+
+  /* Full dark mode — flip Tailwind tokens at the CSS-var level so the
+     whole app inherits without component-by-component rewrites.
+     Buttons/cards/borders/text all follow. */
+  .dark {
+    --color-white: #171b22;
+    --color-gray-50: #1c2129;
+    --color-gray-100: #252a33;
+    --color-gray-200: #2e333d;
+    --color-gray-300: #6b7280;
+    --color-gray-400: #9ba3b0;
+    --color-gray-500: #c4cbd4;
+    --color-gray-600: #d1d5db;
+    --color-gray-700: #e0e4ea;
+    --color-gray-800: #ebeef3;
+    --color-gray-900: #f3f4f6;
+    --color-brand-dark: #e5e7eb;
+    --color-background: #0f1319;
+    --color-foreground: #e5e7eb;
+  }
+
+  /* Specific hardcoded off-white surfaces not hit by tokens. */
+  .dark .bg-\[\#F8FAF9\]\/50 { background-color: #0f1319 !important; }
+  .dark .bg-\[\#F8FAF9\] { background-color: #0f1319 !important; }
 }
