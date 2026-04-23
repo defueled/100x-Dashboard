@@ -58,12 +58,13 @@ import { OnboardingWizard } from './OnboardingWizard';
 import { LeaderboardView } from './LeaderboardView';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 import { ThemeToggle } from './ThemeToggle';
+import { QuestsView } from './QuestsView';
 
 // Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
 const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
 
 
-type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard';
+type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard' | 'quests';
 type QuestStatus = 'completed' | 'active' | 'locked';
 
 interface Quest {
@@ -98,6 +99,7 @@ const SECTION_NAV: Record<SectionId, { label: string; items: SectionNavItem[] }>
         items: [
             { icon: Bot, label: 'Pratību', view: 'ai' },
             { icon: Code2, label: 'VibeCoding', view: 'vibe' },
+            { icon: Flag, label: 'Uzdevumi', view: 'quests' },
             { icon: CalendarDays, label: 'Kalendāri', view: 'calendar', badge: 'Beta' },
         ],
     },
@@ -1149,6 +1151,7 @@ export function DashboardEmbed() {
                 )}
                 {activeView === 'culture' && <CultureView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />}
                 {activeView === 'calendar' && <CalendarView />}
+                {activeView === 'quests' && <QuestsView />}
                 {activeView === 'profile' && <ProfileSettings />}
                 {activeView === 'news' && <NewsView initialCategory="ai" />}
                 {activeView === 'leaderboard' && <LeaderboardView />}
