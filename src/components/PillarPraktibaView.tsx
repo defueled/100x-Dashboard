@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     Bot, TrendingUp, Landmark, Palette,
     CheckCircle2, Clock, XCircle, Sparkles, Lock, Loader2, Trophy, Flame,
+    ChevronDown, ChevronUp, ExternalLink, Copy, MessageSquare, Info,
 } from 'lucide-react';
 import { GHL_LEVELS } from '@/lib/ghlLevels';
 import { ForumProgressBar } from './DashboardEmbed';
@@ -24,6 +25,12 @@ interface Task {
     proof_hint_lv: string | null;
     auto_approve: boolean;
     position: number;
+    instructions_lv?: string | null;
+    external_links?: Array<{ label: string; url: string }> | null;
+    forum_url?: string | null;
+    forum_label?: string | null;
+    forum_template_lv?: string | null;
+    requires_forum_proof?: boolean;
 }
 
 interface Submission {
@@ -368,64 +375,249 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
 
             {/* Submission modal */}
             {selected && (
-                <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={closeModal}>
-                    <div className="bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 dark:border-[var(--color-dark-border)]" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-start justify-between mb-3">
-                            <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tier {selected.tier} · {TIER_LABELS[selected.tier]}</p>
-                                <h3 className="text-lg font-black text-gray-900 dark:text-gray-100 mt-1">{selected.title_lv}</h3>
-                            </div>
-                            <span className="text-sm font-black text-amber-500 shrink-0 ml-3">+{selected.xp_amount} XP</span>
-                        </div>
-                        {selected.description_lv && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{selected.description_lv}</p>
-                        )}
-                        <div className="mb-4">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
-                                {selected.proof_type === 'tx_hash' ? 'Transakcijas hash' : 'Pierādījuma URL'}
-                            </label>
-                            <input
-                                type="text"
-                                value={proof}
-                                onChange={(e) => setProof(e.target.value)}
-                                placeholder={selected.proof_hint_lv || 'https://...'}
-                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-bg)] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 text-sm"
-                                autoFocus
-                            />
-                            {selected.proof_hint_lv && (
-                                <p className="text-[10px] text-gray-400 mt-1.5">{selected.proof_hint_lv}</p>
-                            )}
-                        </div>
-                        {!selected.auto_approve && (
-                            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
-                                <Lock size={14} className="text-amber-600 shrink-0 mt-0.5" />
-                                <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">Šo pārbauda administrators. XP tiek piešķirts pēc apstiprinājuma.</p>
-                            </div>
-                        )}
-                        {error && (
-                            <div className="mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 text-center">
-                                {error}
-                            </div>
-                        )}
-                        {successMsg && (
-                            <div className="mb-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-700 text-center">
-                                {successMsg}
-                            </div>
-                        )}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={closeModal}
-                                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-[var(--color-dark-border)] text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[var(--color-dark-bg)]"
-                            >Atcelt</button>
-                            <button
-                                onClick={submit}
-                                disabled={submitting || !proof.trim()}
-                                className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 disabled:opacity-50"
-                            >{submitting ? 'Iesniedz...' : 'Iesniegt'}</button>
-                        </div>
-                    </div>
-                </div>
+                <TaskModal
+                    task={selected}
+                    proof={proof}
+                    setProof={setProof}
+                    submitting={submitting}
+                    error={error}
+                    successMsg={successMsg}
+                    onClose={closeModal}
+                    onSubmit={submit}
+                />
             )}
         </>
+    );
+}
+
+interface TaskModalProps {
+    task: Task;
+    proof: string;
+    setProof: (s: string) => void;
+    submitting: boolean;
+    error: string | null;
+    successMsg: string | null;
+    onClose: () => void;
+    onSubmit: () => void;
+}
+
+function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClose, onSubmit }: TaskModalProps) {
+    const [showInstructions, setShowInstructions] = useState(true);
+    const [showTemplate, setShowTemplate] = useState(false);
+    const [copied, setCopied] = useState<'template' | 'forum' | null>(null);
+
+    const copy = async (text: string, kind: 'template' | 'forum') => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(kind);
+            setTimeout(() => setCopied(null), 1500);
+        } catch {}
+    };
+
+    const proofLooksValid = (() => {
+        const p = proof.trim();
+        if (!p) return false;
+        if (task.proof_type === 'tx_hash') return /^0x[0-9a-fA-F]{64}$/.test(p);
+        if (/^0x[0-9a-fA-F]{40}$/.test(p)) return true;  // EVM address fallback
+        try {
+            const u = new URL(p);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+            if (task.requires_forum_proof && u.hostname !== 'platforma.100x.lv') return false;
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+
+    const proofWarning = (() => {
+        const p = proof.trim();
+        if (!p || !task.requires_forum_proof || task.proof_type === 'tx_hash') return null;
+        if (/^0x[0-9a-fA-F]{40}$/.test(p)) return null;
+        try {
+            const u = new URL(p);
+            if (u.hostname !== 'platforma.100x.lv') {
+                return 'Šim uzdevumam pierādījumam jābūt no platforma.100x.lv';
+            }
+        } catch {
+            return 'Pārbaudi URL formātu';
+        }
+        return null;
+    })();
+
+    return (
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+            <div
+                className="bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-gray-100 dark:border-[var(--color-dark-border)] my-6"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3 gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Tier {task.tier} · {TIER_LABELS[task.tier]}
+                        </p>
+                        <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-gray-100 mt-1">{task.title_lv}</h3>
+                    </div>
+                    <span className="text-sm font-black text-amber-500 shrink-0">+{task.xp_amount} XP</span>
+                </div>
+
+                {/* Description */}
+                {task.description_lv && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{task.description_lv}</p>
+                )}
+
+                {/* Step-by-step instructions */}
+                {task.instructions_lv && (
+                    <div className="mb-4 rounded-2xl border border-gray-100 dark:border-[var(--color-dark-border)] overflow-hidden">
+                        <button
+                            onClick={() => setShowInstructions((v) => !v)}
+                            className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-[var(--color-dark-bg)] hover:bg-gray-100 dark:hover:bg-[var(--color-dark-border)] transition-colors"
+                        >
+                            <span className="flex items-center gap-2 text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">
+                                <Info size={14} className="text-emerald-500" />
+                                Kā izpildīt
+                            </span>
+                            {showInstructions ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                        </button>
+                        {showInstructions && (
+                            <div className="p-4 bg-white dark:bg-[var(--color-dark-surface)]">
+                                <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-sans">{task.instructions_lv}</pre>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* External resource links */}
+                {task.external_links && task.external_links.length > 0 && (
+                    <div className="mb-4">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Resursi</p>
+                        <div className="flex flex-wrap gap-2">
+                            {task.external_links.map((link, i) => (
+                                <a
+                                    key={i}
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors border border-emerald-200 dark:border-emerald-800"
+                                >
+                                    <ExternalLink size={11} />
+                                    {link.label}
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Forum CTA + post template */}
+                {task.forum_url && (
+                    <div className="mb-4 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                            <span className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
+                                <MessageSquare size={14} />
+                                {task.requires_forum_proof ? 'Pierādījumam jābūt no foruma' : 'Dalies forumā ar rezultātu'}
+                            </span>
+                            <a
+                                href={task.forum_url}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors"
+                            >
+                                <ExternalLink size={11} />
+                                {task.forum_label || 'Atvērt forumu'}
+                            </a>
+                        </div>
+                        {task.forum_template_lv && (
+                            <>
+                                <button
+                                    onClick={() => setShowTemplate((v) => !v)}
+                                    className="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1 mt-1"
+                                >
+                                    {showTemplate ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                    Posta šablons (kopējams)
+                                </button>
+                                {showTemplate && (
+                                    <div className="mt-2 relative">
+                                        <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-white dark:bg-[var(--color-dark-bg)] rounded-lg p-3 border border-blue-200 dark:border-blue-800 max-h-48 overflow-y-auto font-mono">{task.forum_template_lv}</pre>
+                                        <button
+                                            onClick={() => copy(task.forum_template_lv!, 'template')}
+                                            className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-[var(--color-dark-surface)] border border-gray-200 dark:border-[var(--color-dark-border)] text-[10px] font-bold text-gray-600 dark:text-gray-400 hover:text-emerald-600"
+                                        >
+                                            {copied === 'template' ? <CheckCircle2 size={10} className="text-emerald-500" /> : <Copy size={10} />}
+                                            {copied === 'template' ? 'Nokopēts' : 'Kopēt'}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* Proof input */}
+                <div className="mb-4">
+                    <label
+                        className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
+                        title={
+                            task.proof_type === 'tx_hash'
+                                ? 'On-chain transakcijas identifikators (0x + 64 simboli)'
+                                : task.requires_forum_proof
+                                    ? 'Saite uz tavu postu platforma.100x.lv'
+                                    : 'Publiska URL, ko admin var atvērt'
+                        }
+                    >
+                        {task.proof_type === 'tx_hash' ? 'Transakcijas hash' : 'Pierādījuma URL'}
+                        <Info size={11} className="text-gray-300" />
+                    </label>
+                    <input
+                        type="text"
+                        value={proof}
+                        onChange={(e) => setProof(e.target.value)}
+                        placeholder={task.proof_hint_lv || 'https://...'}
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-[var(--color-dark-bg)] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 text-sm transition-colors ${
+                            proofWarning
+                                ? 'border-amber-400 focus:ring-amber-200 focus:border-amber-500'
+                                : 'border-gray-200 dark:border-[var(--color-dark-border)] focus:ring-emerald-300 focus:border-emerald-400'
+                        }`}
+                        autoFocus
+                    />
+                    {proofWarning ? (
+                        <p className="text-[11px] font-medium text-amber-600 mt-1.5">⚠ {proofWarning}</p>
+                    ) : task.proof_hint_lv ? (
+                        <p className="text-[10px] text-gray-400 mt-1.5">{task.proof_hint_lv}</p>
+                    ) : null}
+                </div>
+
+                {!task.auto_approve && (
+                    <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                        <Lock size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                            Šo pārbauda administrators. XP tiek piešķirts pēc apstiprinājuma.
+                        </p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 text-center">
+                        {error}
+                    </div>
+                )}
+                {successMsg && (
+                    <div className="mb-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-700 text-center">
+                        {successMsg}
+                    </div>
+                )}
+
+                <div className="flex gap-2">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-[var(--color-dark-border)] text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[var(--color-dark-bg)]"
+                    >Atcelt</button>
+                    <button
+                        onClick={onSubmit}
+                        disabled={submitting || !proofLooksValid}
+                        className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 disabled:opacity-50"
+                    >{submitting ? 'Iesniedz...' : 'Iesniegt'}</button>
+                </div>
+            </div>
+        </div>
     );
 }

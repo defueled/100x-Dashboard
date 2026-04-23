@@ -74,7 +74,6 @@ export async function POST(req: Request) {
     // Validate proof by type
     const proofType = task.proof_type as 'url' | 'tx_hash' | 'admin_review';
     if (proofType === 'url') {
-        // Accept URL, EVM address (for wallet-setup task), or tx hash as fallback
         if (!isReasonableUrl(proof) && !isEvmAddress(proof)) {
             return NextResponse.json({ error: 'Nederīga URL vai adrese' }, { status: 400 });
         }
@@ -85,6 +84,21 @@ export async function POST(req: Request) {
     } else if (proofType === 'admin_review') {
         if (!isReasonableUrl(proof)) {
             return NextResponse.json({ error: 'Nepieciešama URL pierādījuma saite' }, { status: 400 });
+        }
+    }
+
+    // If task requires a forum proof, force the URL to be platforma.100x.lv.
+    // Skip enforcement for tx_hash proof or EVM address proof.
+    if (task.requires_forum_proof && proofType !== 'tx_hash' && !isEvmAddress(proof)) {
+        try {
+            const u = new URL(proof);
+            if (u.hostname !== 'platforma.100x.lv') {
+                return NextResponse.json({
+                    error: 'Šim uzdevumam pierādījumam jābūt no platforma.100x.lv (mūsu komūnas forums)',
+                }, { status: 400 });
+            }
+        } catch {
+            return NextResponse.json({ error: 'Nederīga URL' }, { status: 400 });
         }
     }
 
