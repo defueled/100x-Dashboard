@@ -13,10 +13,12 @@ type Pillar = 'ai' | 'tredfi' | 'defi' | 'culture';
 type ProofType = 'url' | 'tx_hash' | 'admin_review';
 type Status = 'pending' | 'approved' | 'rejected';
 type TierFilter = 'all' | 1 | 2 | 3;
+type ProviderFilter = 'all' | 'openai' | 'anthropic' | 'grok' | 'gemini';
 
 interface Task {
     id: string;
     pillar: string; // 'ai' | 'tredfi' | 'defi' | 'culture' | 'global'
+    provider?: string | null; // 'openai' | 'anthropic' | 'grok' | 'gemini' | null
     tier: 1 | 2 | 3;
     title_lv: string;
     description_lv: string | null;
@@ -32,6 +34,13 @@ interface Task {
     forum_template_lv?: string | null;
     requires_forum_proof?: boolean;
 }
+
+const PROVIDER_META: Record<Exclude<ProviderFilter, 'all'>, { label: string; emoji: string }> = {
+    openai: { label: 'OpenAI', emoji: '🟢' },
+    anthropic: { label: 'Anthropic', emoji: '🟣' },
+    grok: { label: 'Grok', emoji: '⚫' },
+    gemini: { label: 'Gemini', emoji: '🔵' },
+};
 
 interface Submission {
     task_id: string;
@@ -115,6 +124,7 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
     const [subs, setSubs] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [tierFilter, setTierFilter] = useState<TierFilter>('all');
+    const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
     const [selected, setSelected] = useState<Task | null>(null);
     const [proof, setProof] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -144,9 +154,12 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
     }, [subs]);
 
     const filtered = useMemo(() => {
-        if (tierFilter === 'all') return tasks;
-        return tasks.filter((t) => t.tier === tierFilter);
-    }, [tasks, tierFilter]);
+        return tasks.filter((t) => {
+            if (tierFilter !== 'all' && t.tier !== tierFilter) return false;
+            if (pillar === 'ai' && providerFilter !== 'all' && t.provider !== providerFilter) return false;
+            return true;
+        });
+    }, [tasks, tierFilter, providerFilter, pillar]);
 
     const byTier = useMemo(() => {
         const g: Record<number, Task[]> = { 1: [], 2: [], 3: [] };
@@ -268,6 +281,24 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                         </div>
                     </div>
 
+                    {/* AI flywheel banner */}
+                    {pillar === 'ai' && (
+                        <div
+                            className="p-4 rounded-2xl border"
+                            style={{ backgroundColor: `${meta.accent}14`, borderColor: `${meta.accent}33` }}
+                        >
+                            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: meta.accent }}>
+                                AI Pratības aplis
+                            </p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-1">
+                                Iemācies → Iztestē → Padalies viedokli forumā → XP → airdrop atlīdzība aktīvākajiem. Repeat.
+                            </p>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                Katrs provideris (OpenAI, Anthropic, Grok, Gemini) ir atsevišķa mācību tēma ar saviem stipro pušu uzsvariem.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Difficulty filter */}
                     <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 py-1">
                         {([
@@ -293,6 +324,34 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                             );
                         })}
                     </div>
+
+                    {/* Provider filter (AI pillar only) */}
+                    {pillar === 'ai' && (
+                        <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 py-1">
+                            {(['all', 'openai', 'anthropic', 'grok', 'gemini'] as const).map((p) => {
+                                const active = providerFilter === p;
+                                const count = p === 'all'
+                                    ? tasks.length
+                                    : tasks.filter((t) => t.provider === p).length;
+                                const label = p === 'all' ? 'Visi provideri' : `${PROVIDER_META[p].emoji} ${PROVIDER_META[p].label}`;
+                                return (
+                                    <button
+                                        key={p}
+                                        onClick={() => setProviderFilter(p)}
+                                        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                                            active
+                                                ? 'text-white border-transparent'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-[var(--color-dark-surface)] dark:border-[var(--color-dark-border)] dark:text-gray-400'
+                                        }`}
+                                        style={active ? { backgroundColor: meta.accent } : undefined}
+                                    >
+                                        {label}
+                                        <span className={`ml-1.5 text-[10px] ${active ? 'opacity-80' : 'opacity-50'}`}>({count})</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Task list */}
                     {loading ? (
