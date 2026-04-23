@@ -1,4 +1,7 @@
+"use client";
+
 import { PlayCircle, FileText, CheckCircle, ArrowRight } from "lucide-react";
+import { ScrollReveal, ShimmerCard, StaggerContainer, StaggerItem } from "./scroll";
 
 export function CurriculumScroll() {
     return (
@@ -6,7 +9,7 @@ export function CurriculumScroll() {
             <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-24">
 
                 {/* Text Content - Left Side */}
-                <div className="w-full md:w-1/2 space-y-8">
+                <ScrollReveal variant="slideLeft" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 text-brand-green text-sm font-bold tracking-wide uppercase mb-2">
                         Izglītības Moduļi
                     </div>
@@ -47,14 +50,17 @@ export function CurriculumScroll() {
                         </li>
                     </ul>
 
-                    <button className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20">
+                    <button
+                        onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
+                    >
                         Abonēt ekosistēmas pieeju
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
-                </div>
+                </ScrollReveal>
 
                 {/* Visual Content - Right Side */}
-                <div className="w-full md:w-1/2 relative">
+                <ScrollReveal variant="slideRight" className="w-full md:w-1/2 relative">
                     <div className="absolute inset-0 bg-gradient-to-tr from-brand-green/20 to-brand-blue/20 blur-3xl rounded-full -z-10"></div>
                     <div className="glass-card rounded-3xl p-6 border border-white/20 shadow-premium relative transform translate-x-4 md:-translate-y-4">
                         <div className="w-full h-48 bg-brand-dark/5 rounded-xl mb-4 overflow-hidden relative">
@@ -72,7 +78,7 @@ export function CurriculumScroll() {
                         <p className="text-xs text-brand-dark/60 font-medium text-right">Progress: 45%</p>
                     </div>
 
-                    <div className="glass-card rounded-3xl p-4 border border-white/20 shadow-premium absolute bottom-[-10%] left-[-10%] w-2/3 backdrop-blur-xl animate-float-delayed">
+                    <ShimmerCard className="glass-card rounded-3xl p-4 border border-white/20 shadow-premium absolute bottom-[-10%] left-[-10%] w-2/3 backdrop-blur-xl animate-float-delayed">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-brand-orange/20 flex items-center justify-center text-brand-orange">
                                 <FileText size={24} />
@@ -82,8 +88,8 @@ export function CurriculumScroll() {
                                 <p className="text-xs text-brand-green font-bold">+50 XP iegūti</p>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </ShimmerCard>
+                </ScrollReveal>
 
             </div>
         </section>

@@ -58,13 +58,13 @@ import { OnboardingWizard } from './OnboardingWizard';
 import { LeaderboardView } from './LeaderboardView';
 import { GHL_LEVELS, getGhlLevelFromTags } from '@/lib/ghlLevels';
 import { ThemeToggle } from './ThemeToggle';
-import { QuestsView } from './QuestsView';
+import { PillarPraktibaView } from './PillarPraktibaView';
 
 // Matches XP claim API formula: floor(sqrt(xp / 100)) + 1
 const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
 
 
-type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard' | 'quests';
+type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard';
 type QuestStatus = 'completed' | 'active' | 'locked';
 
 interface Quest {
@@ -97,28 +97,27 @@ const SECTION_NAV: Record<SectionId, { label: string; items: SectionNavItem[] }>
     ai: {
         label: 'AI & Rīki',
         items: [
-            { icon: Bot, label: 'Pratību', view: 'ai' },
+            { icon: Bot, label: 'Pratība', view: 'ai' },
             { icon: Code2, label: 'VibeCoding', view: 'vibe' },
-            { icon: Flag, label: 'Uzdevumi', view: 'quests' },
             { icon: CalendarDays, label: 'Kalendāri', view: 'calendar', badge: 'Beta' },
         ],
     },
     tredfi: {
         label: 'TradFi',
         items: [
-            { icon: TrendingUp, label: 'TredFi Arena', view: 'tredfi' },
+            { icon: TrendingUp, label: 'Pratība', view: 'tredfi' },
         ],
     },
     defi: {
         label: 'DeFi',
         items: [
-            { icon: Landmark, label: 'DeFi Dungeon', view: 'defi' },
+            { icon: Landmark, label: 'Pratība', view: 'defi' },
         ],
     },
     culture: {
         label: 'Kultūra',
         items: [
-            { icon: Palette, label: 'Culture Guild', view: 'culture' },
+            { icon: Palette, label: 'Pratība', view: 'culture' },
         ],
     },
 };
@@ -1131,27 +1130,20 @@ export function DashboardEmbed() {
                     />
                 )}
                 {activeView === 'ai' && (
-                    <AIView
-                        session={session}
-                        dbProgress={dbProgress}
-                        syncProgress={syncProgress}
-                        getQuestStatus={getQuestStatus}
-                        getQuestProgressValue={getQuestProgressValue}
-                        totalXp={totalXp}
-                        currentLevel={currentLevel}
-                        ghlLevel={ghlLevel}
-                        forumProgress={forumProgress}
-                    />
+                    <PillarPraktibaView pillar="ai" totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
                 )}
-                {activeView === 'tredfi' && <TredfiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />}
+                {activeView === 'tredfi' && (
+                    <PillarPraktibaView pillar="tredfi" totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
+                )}
                 {activeView === 'defi' && (
-                    <TokenGate evmAddress={profileData?.evm_address} minBalance={1} featureName="DeFi Dungeon">
-                        <DeFiView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
+                    <TokenGate evmAddress={profileData?.evm_address} minBalance={1} featureName="DeFi Pratība">
+                        <PillarPraktibaView pillar="defi" totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
                     </TokenGate>
                 )}
-                {activeView === 'culture' && <CultureView totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />}
+                {activeView === 'culture' && (
+                    <PillarPraktibaView pillar="culture" totalXp={totalXp} currentLevel={currentLevel} ghlLevel={ghlLevel} forumProgress={forumProgress} />
+                )}
                 {activeView === 'calendar' && <CalendarView />}
-                {activeView === 'quests' && <QuestsView />}
                 {activeView === 'profile' && <ProfileSettings />}
                 {activeView === 'news' && <NewsView initialCategory="ai" />}
                 {activeView === 'leaderboard' && <LeaderboardView />}

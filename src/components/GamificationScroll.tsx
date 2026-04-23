@@ -1,14 +1,18 @@
+"use client";
+
 import { Trophy, Gift, Vote, ArrowRight, CheckCircle } from "lucide-react";
+import { ScrollReveal, SpringCounter, DotGrid } from "./scroll";
 
 export function GamificationScroll() {
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
+            <DotGrid dotColor="rgba(24, 139, 246, 0.08)" gap={24} />
             <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-24">
 
                 {/* Text Content - Left Side */}
-                <div className="w-full md:w-1/2 space-y-8">
+                <ScrollReveal variant="slideLeft" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 text-brand-green text-sm font-bold tracking-wide uppercase mb-2">
-                        Gamifikācija un DAO
+                        Spēles teorija un DAO
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark leading-tight">
                         Mācies. Krāj XP. <span className="text-gradient-premium">Ietekmē.</span>
@@ -47,14 +51,17 @@ export function GamificationScroll() {
                         </li>
                     </ul>
 
-                    <button className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20">
+                    <button
+                        onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
+                    >
                         Sāc pelnīt pieredzi
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
-                </div>
+                </ScrollReveal>
 
                 {/* Visual Content - Right Side */}
-                <div className="w-full md:w-1/2 relative">
+                <ScrollReveal variant="scaleUp" className="w-full md:w-1/2 relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/20 to-brand-green/20 blur-3xl rounded-full -z-10"></div>
 
                     {/* User Level Card Mockup */}
@@ -65,12 +72,12 @@ export function GamificationScroll() {
                                 <circle className="text-brand-green drop-shadow-md" strokeWidth="8" strokeDasharray="364" strokeDashoffset="120" strokeLinecap="round" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64" />
                             </svg>
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                <span className="text-3xl font-bold text-brand-dark">Lvl 4</span>
+                                <span className="text-3xl font-bold text-brand-dark">Lvl <SpringCounter target={4} className="inline" /></span>
                             </div>
                         </div>
 
                         <h3 className="text-2xl font-bold text-brand-dark mb-1">Tu esi Inovators</h3>
-                        <p className="text-sm font-medium text-brand-dark/60 mb-6">Līdz Level 5 atlikuši 450 XP</p>
+                        <p className="text-sm font-medium text-brand-dark/60 mb-6">Līdz Level 5 atlikuši <SpringCounter target={450} className="inline font-bold text-brand-green" /> XP</p>
 
                         <div className="w-full flex justify-between items-center bg-brand-dark/5 rounded-2xl p-4">
                             <div className="flex items-center gap-3">
@@ -87,7 +94,7 @@ export function GamificationScroll() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </ScrollReveal>
 
             </div>
         </section>

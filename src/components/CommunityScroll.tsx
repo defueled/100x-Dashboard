@@ -1,4 +1,7 @@
+"use client";
+
 import { MessageSquare, Video, CalendarHeart, ArrowRight } from "lucide-react";
+import { ScrollReveal, ShimmerCard } from "./scroll";
 
 export function CommunityScroll() {
     return (
@@ -6,7 +9,7 @@ export function CommunityScroll() {
             <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-24">
 
                 {/* Text Content - Right Side */}
-                <div className="w-full md:w-1/2 space-y-8">
+                <ScrollReveal variant="slideRight" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10 text-brand-orange text-sm font-bold tracking-wide uppercase mb-2">
                         Atbalsts visos līmeņos
                     </div>
@@ -47,14 +50,17 @@ export function CommunityScroll() {
                         </li>
                     </ul>
 
-                    <button className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20">
+                    <button
+                        onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
+                    >
                         Pievienoties komūnai
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
-                </div>
+                </ScrollReveal>
 
                 {/* Visual Content - Left Side */}
-                <div className="w-full md:w-1/2 relative">
+                <ScrollReveal variant="slideLeft" className="w-full md:w-1/2 relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/20 to-brand-green/10 blur-3xl rounded-full -z-10"></div>
 
                     {/* Main Chat Mockup */}
@@ -92,7 +98,7 @@ export function CommunityScroll() {
                     </div>
 
                     {/* Floating Zoom Session Notification */}
-                    <div className="glass-card rounded-2xl p-4 border border-white/20 shadow-premium absolute top-[10%] right-[-5%] w-[60%] backdrop-blur-xl animate-float">
+                    <ShimmerCard className="glass-card rounded-2xl p-4 border border-white/20 shadow-premium absolute top-[10%] right-[-5%] w-[60%] backdrop-blur-xl animate-float">
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white">
@@ -105,8 +111,8 @@ export function CommunityScroll() {
                                 <p className="text-[10px] text-brand-dark/60 font-medium">Pievienojušies 42 dībnieki</p>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </ShimmerCard>
+                </ScrollReveal>
 
             </div>
         </section>

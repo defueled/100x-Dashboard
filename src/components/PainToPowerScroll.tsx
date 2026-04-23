@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TrendingDown, ShieldAlert, BotOff, Wallet, CheckCircle2, TrendingUp, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
 
 const painPoints = [
     {
@@ -255,7 +256,7 @@ export function PainToPowerScroll() {
 
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
-            <div className="text-center mb-16">
+            <ScrollReveal variant="blurFadeIn" className="text-center mb-16">
                 <div className="inline-block px-4 py-1.5 rounded-full border border-brand-dark/20 bg-brand-dark/5 text-brand-dark text-sm font-bold tracking-wide uppercase mb-4">
                     Kāpēc tieši tagad?
                 </div>
@@ -265,38 +266,39 @@ export function PainToPowerScroll() {
                 <p className="text-xl font-medium text-brand-dark/60 max-w-2xl mx-auto">
                     Mēs izprotam lielākos šķēršļus un bailes mūsdienu finanšu pasaulē. 100x ekosistēma ir tavs vairogs pret neziņu un vērtības zudumu.
                 </p>
-            </div>
+            </ScrollReveal>
 
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
 
                 {/* Left Side: Pain Selection */}
-                <div className="w-full lg:w-5/12 space-y-4">
+                <StaggerContainer className="w-full lg:w-5/12 space-y-4" staggerDelay={0.1}>
                     {painPoints.map((point, index) => {
                         const Icon = point.painIcon;
                         const isActive = activeIndex === index;
                         return (
-                            <button
-                                key={point.id}
-                                onClick={() => setActiveIndex(index)}
-                                className={`w-full text-left p-6 rounded-3xl transition-all duration-300 border flex gap-6 items-start ${isActive
-                                    ? "bg-white border-brand-dark/20 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scale-100"
-                                    : "glass-card border-white/30 hover:bg-white/50 scale-[0.98] opacity-70 hover:opacity-100"
-                                    }`}
-                            >
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${point.painBg} ${point.painColor}`}>
-                                    <Icon size={24} />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-brand-dark mb-2">{point.title}</h3>
-                                    <p className="text-sm font-medium text-brand-dark/60 leading-relaxed">{point.description}</p>
-                                </div>
-                            </button>
+                            <StaggerItem key={point.id}>
+                                <button
+                                    onClick={() => setActiveIndex(index)}
+                                    className={`w-full text-left p-6 rounded-3xl transition-all duration-300 border flex gap-6 items-start ${isActive
+                                        ? "bg-white border-brand-dark/20 shadow-[0_8px_30px_rgb(0,0,0,0.06)] scale-100"
+                                        : "glass-card border-white/30 hover:bg-white/50 scale-[0.98] opacity-70 hover:opacity-100"
+                                        }`}
+                                >
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${point.painBg} ${point.painColor}`}>
+                                        <Icon size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-brand-dark mb-2">{point.title}</h3>
+                                        <p className="text-sm font-medium text-brand-dark/60 leading-relaxed">{point.description}</p>
+                                    </div>
+                                </button>
+                            </StaggerItem>
                         );
                     })}
-                </div>
+                </StaggerContainer>
 
                 {/* Right Side: Animated Transformation Canvas (Power) */}
-                <div className="w-full lg:w-7/12 sticky top-24 pt-8 lg:pt-0">
+                <ScrollReveal variant="scaleUp" delay={0.2} className="w-full lg:w-7/12 sticky top-24 pt-8 lg:pt-0">
                     <div
                         className="relative group cursor-pointer"
                         onMouseEnter={() => setIsHovered(true)}
@@ -376,7 +378,9 @@ export function PainToPowerScroll() {
                                 </ul>
                             </div>
 
-                            <button className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all transform duration-300 shadow-lg ${!isHovered
+                            <button
+                                onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
+                                className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all transform duration-300 shadow-lg ${!isHovered
                                     ? "bg-gray-800 hover:bg-brand-dark shadow-gray-200"
                                     : activeIndex === 0 ? "bg-brand-orange hover:bg-brand-orange/90 shadow-brand-orange/20"
                                         : activeIndex === 1 ? "bg-brand-green hover:bg-brand-green/90 shadow-brand-green/20"
@@ -387,7 +391,7 @@ export function PainToPowerScroll() {
 
                         </div>
                     </div>
-                </div>
+                </ScrollReveal>
 
             </div>
         </section>
