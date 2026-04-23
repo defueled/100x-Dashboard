@@ -5,6 +5,7 @@ import {
     Bot, TrendingUp, Landmark, Palette,
     CheckCircle2, Clock, XCircle, Sparkles, Lock, Loader2, Trophy, Flame,
     ChevronDown, ChevronUp, ExternalLink, Copy, MessageSquare, Info,
+    Building2, UserPlus, Target,
 } from 'lucide-react';
 import { GHL_LEVELS } from '@/lib/ghlLevels';
 import { ForumProgressBar } from './DashboardEmbed';
@@ -115,6 +116,52 @@ const PILLAR_META: Record<Pillar, {
 };
 
 const TIER_LABELS: Record<number, string> = { 1: 'Iesācējs', 2: 'Pētnieks', 3: 'Meistars' };
+
+// Parse instructions_lv that uses "(A) heading\nbody\n(B) heading\nbody" format
+// into a list of wizard steps. Falls back to [] if the text has no section markers.
+function parseWizardSections(text: string): Array<{ letter: string; title: string; body: string }> {
+    const lines = text.split('\n');
+    const headerRe = /^\(([A-Z])\)\s+(.+)$/;
+    const out: Array<{ letter: string; title: string; body: string[] }> = [];
+    let current: { letter: string; title: string; body: string[] } | null = null;
+    for (const line of lines) {
+        const m = line.match(headerRe);
+        if (m) {
+            if (current) out.push(current);
+            current = { letter: m[1], title: m[2].trim(), body: [] };
+        } else if (current) {
+            current.body.push(line);
+        }
+    }
+    if (current) out.push(current);
+    return out.map((s) => ({ letter: s.letter, title: s.title, body: s.body.join('\n').trim() }));
+}
+
+// Pick an icon + accent for a section based on its title keyword, falling back to letter order
+function wizardIconFor(letter: string, title: string): { Icon: React.ElementType; color: string; bg: string; label: string } {
+    const t = title.toLowerCase();
+    if (t.startsWith('kas ir') || t.includes('kāpēc') || t.includes('par uzņēmum')) {
+        return { Icon: Building2, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800', label: 'Iepazīsti' };
+    }
+    if (t.includes('izveidot profilu') || t.includes('kā sākt') || t.includes('kā iegūt') || t.includes('piekļū')) {
+        return { Icon: UserPlus, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800', label: 'Profila izveide' };
+    }
+    if (t.includes('stiprās puses') || t.includes('idejas') || t.includes('praktiskais padoms') || t.includes('pro padoms') || t.includes('alternatīvas')) {
+        return { Icon: Sparkles, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', label: 'Stiprās puses' };
+    }
+    if (t.includes('ko darīt') || t.includes('uzdevums') || t.includes('publicē forumā') || t.includes('ko publicēt')) {
+        return { Icon: Target, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800', label: 'Tavs uzdevums' };
+    }
+    // fallback by letter order
+    const fallbacks = [
+        { Icon: Building2, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800', label: 'Iepazīsti' },
+        { Icon: UserPlus, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800', label: 'Soļi' },
+        { Icon: Sparkles, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', label: 'Padomi' },
+        { Icon: Target, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800', label: 'Uzdevums' },
+    ];
+    const idx = Math.max(0, letter.charCodeAt(0) - 'A'.charCodeAt(0)) % fallbacks.length;
+    return fallbacks[idx];
+}
 
 export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, forumProgress }: Props) {
     const meta = PILLAR_META[pillar];
@@ -539,8 +586,44 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                             {showInstructions ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                         </button>
                         {showInstructions && (
-                            <div className="p-4 bg-white dark:bg-[var(--color-dark-surface)]">
-                                <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-sans">{task.instructions_lv}</pre>
+                            <div className="p-3 md:p-4 bg-white dark:bg-[var(--color-dark-surface)] space-y-3">
+                                {(() => {
+                                    const sections = parseWizardSections(task.instructions_lv!);
+                                    if (sections.length === 0) {
+                                        return (
+                                            <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-sans">
+                                                {task.instructions_lv}
+                                            </pre>
+                                        );
+                                    }
+                                    return sections.map((s, i) => {
+                                        const { Icon, color, bg, label } = wizardIconFor(s.letter, s.title);
+                                        return (
+                                            <div key={s.letter + i} className={`rounded-xl border ${bg} p-3`}>
+                                                <div className="flex items-start gap-2.5">
+                                                    <div className={`w-7 h-7 rounded-full bg-white dark:bg-gray-900/40 flex items-center justify-center shrink-0 ${color}`}>
+                                                        <Icon size={14} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest ${color}`}>
+                                                                Solis {i + 1} · {label}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[13px] font-bold text-gray-900 dark:text-gray-100 mt-0.5 leading-snug">
+                                                            {s.title}
+                                                        </p>
+                                                        {s.body && (
+                                                            <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-sans mt-2">
+                                                                {s.body}
+                                                            </pre>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()}
                             </div>
                         )}
                     </div>
