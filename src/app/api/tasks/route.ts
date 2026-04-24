@@ -19,7 +19,7 @@ export async function GET() {
     }
 
     const supabase = getSupabase();
-    const [catalogRes, submissionsRes] = await Promise.all([
+    const [catalogRes, submissionsRes, claimsRes] = await Promise.all([
         supabase
             .from('task_catalog')
             .select('*')
@@ -31,6 +31,10 @@ export async function GET() {
             .from('task_submissions')
             .select('task_id, status, proof_url, submitted_at, reviewed_at, admin_notes')
             .eq('user_email', session.user.email),
+        supabase
+            .from('xp_claims')
+            .select('task_id, claim_type, xp_amount, claimed_at')
+            .eq('user_email', session.user.email),
     ]);
 
     if (catalogRes.error) {
@@ -40,5 +44,6 @@ export async function GET() {
     return NextResponse.json({
         tasks: catalogRes.data || [],
         submissions: submissionsRes.data || [],
+        claims: claimsRes.data || [],
     });
 }

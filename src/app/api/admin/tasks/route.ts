@@ -97,36 +97,39 @@ export async function POST(req: Request) {
 
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-    // On approve: award XP (idempotent via xp_claims unique task_id per user)
+    // On approve: award BONUS XP (idempotent via xp_claims UNIQUE(user_email, task_id, claim_type))
     if (action === 'approve') {
         const { data: task } = await supabase
             .from('task_catalog')
-            .select('xp_amount')
+            .select('bonus_xp, xp_amount')
             .eq('id', sub.task_id)
             .maybeSingle();
 
         if (task) {
+            const bonusXp = Number(task.bonus_xp ?? task.xp_amount ?? 0);
             const { data: alreadyClaimed } = await supabase
                 .from('xp_claims')
                 .select('task_id')
                 .eq('user_email', sub.user_email)
                 .eq('task_id', sub.task_id)
+                .eq('claim_type', 'bonus')
                 .maybeSingle();
 
-            if (!alreadyClaimed) {
+            if (!alreadyClaimed && bonusXp > 0) {
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('total_xp')
                     .eq('email', sub.user_email)
                     .maybeSingle();
-                const newTotalXp = Number(profile?.total_xp || 0) + Number(task.xp_amount);
+                const newTotalXp = Number(profile?.total_xp || 0) + bonusXp;
                 const newLevel = Math.floor(Math.sqrt(newTotalXp / 100)) + 1;
 
                 await Promise.all([
                     supabase.from('xp_claims').insert({
                         user_email: sub.user_email,
                         task_id: sub.task_id,
-                        xp_amount: task.xp_amount,
+                        xp_amount: bonusXp,
+                        claim_type: 'bonus',
                     }),
                     supabase.from('profiles').update({
                         total_xp: newTotalXp,

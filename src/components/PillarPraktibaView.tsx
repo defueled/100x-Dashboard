@@ -24,6 +24,8 @@ interface Task {
     title_lv: string;
     description_lv: string | null;
     xp_amount: number;
+    base_xp?: number | null;
+    bonus_xp?: number | null;
     proof_type: ProofType;
     proof_hint_lv: string | null;
     auto_approve: boolean;
@@ -34,6 +36,13 @@ interface Task {
     forum_label?: string | null;
     forum_template_lv?: string | null;
     requires_forum_proof?: boolean;
+}
+
+interface Claim {
+    task_id: string;
+    claim_type: 'base' | 'bonus';
+    xp_amount: number;
+    claimed_at: string;
 }
 
 const PROVIDER_META: Record<Exclude<ProviderFilter, 'all'>, { label: string; emoji: string }> = {
@@ -169,7 +178,9 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [subs, setSubs] = useState<Submission[]>([]);
+    const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
+    const [claimingId, setClaimingId] = useState<string | null>(null);
     const [tierFilter, setTierFilter] = useState<TierFilter>('all');
     const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
     const [selected, setSelected] = useState<Task | null>(null);
@@ -186,6 +197,7 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
             if (res.ok) {
                 setTasks((data.tasks || []).filter((t: Task) => t.pillar === catalogKey));
                 setSubs(data.submissions || []);
+                setClaims(data.claims || []);
             }
         } finally {
             setLoading(false);
@@ -199,6 +211,17 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
         for (const s of subs) m.set(s.task_id, s);
         return m;
     }, [subs]);
+
+    const claimMap = useMemo(() => {
+        const m = new Map<string, { base?: Claim; bonus?: Claim }>();
+        for (const c of claims) {
+            const entry = m.get(c.task_id) || {};
+            if (c.claim_type === 'base') entry.base = c;
+            else if (c.claim_type === 'bonus') entry.bonus = c;
+            m.set(c.task_id, entry);
+        }
+        return m;
+    }, [claims]);
 
     const filtered = useMemo(() => {
         return tasks.filter((t) => {
@@ -214,9 +237,12 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
         return g;
     }, [filtered]);
 
-    // Stats
+    // Stats — "completed" now means ANY XP claim (base or bonus) exists on the task
     const totalTasks = tasks.length;
-    const approvedCount = tasks.filter((t) => subMap.get(t.id)?.status === 'approved').length;
+    const approvedCount = tasks.filter((t) => {
+        const c = claimMap.get(t.id);
+        return c?.base || c?.bonus;
+    }).length;
     const pendingCount = tasks.filter((t) => subMap.get(t.id)?.status === 'pending').length;
 
     const ghlObj = GHL_LEVELS.find((l) => l.level === ghlLevel) || GHL_LEVELS[0];
@@ -252,6 +278,27 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
             setTimeout(closeModal, 1200);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const claim = async (taskId: string) => {
+        setClaimingId(taskId);
+        setError(null);
+        try {
+            const res = await fetch('/api/tasks/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: taskId }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.error || 'Kļūda');
+                return;
+            }
+            setSuccessMsg(data.message || 'Bāze iegūta');
+            await load();
+        } finally {
+            setClaimingId(null);
         }
     };
 
@@ -418,53 +465,67 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {list.map((task) => {
                                                 const sub = subMap.get(task.id);
+                                                const claim = claimMap.get(task.id) || {};
+                                                const baseClaimed = !!claim.base;
+                                                const bonusClaimed = !!claim.bonus;
+                                                const fullyDone = baseClaimed && bonusClaimed;
                                                 const status = sub?.status;
-                                                const isApproved = status === 'approved';
-                                                const isPending = status === 'pending';
-                                                const isRejected = status === 'rejected';
+                                                const isPending = status === 'pending' && !bonusClaimed;
+                                                const isRejected = status === 'rejected' && !bonusClaimed;
+                                                const baseXp = Number(task.base_xp ?? 0);
+                                                const bonusXp = Number(task.bonus_xp ?? task.xp_amount ?? 0);
                                                 return (
                                                     <button
                                                         key={task.id}
-                                                        onClick={() => !isApproved && openModal(task)}
-                                                        disabled={isApproved}
+                                                        onClick={() => !fullyDone && openModal(task)}
+                                                        disabled={fullyDone}
                                                         className={`text-left p-4 rounded-2xl border transition-all ${
-                                                            isApproved
-                                                                ? 'bg-gray-50/50 dark:bg-gray-50/10 border-gray-100 dark:border-[var(--color-dark-border)] opacity-60 cursor-default'
+                                                            fullyDone
+                                                                ? 'bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-200/60 dark:border-emerald-800/40 opacity-80 cursor-default'
+                                                                : bonusClaimed
+                                                                ? 'bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-300 dark:border-emerald-700'
                                                                 : 'bg-white dark:bg-[var(--color-dark-surface)] border-gray-100 dark:border-[var(--color-dark-border)] hover:border-emerald-300 hover:shadow-sm'
                                                         }`}
                                                     >
                                                         <div className="flex items-start justify-between mb-1">
                                                             <div className="flex items-start gap-2 min-w-0">
                                                                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                                                                    isApproved ? 'bg-emerald-500 text-white'
+                                                                    fullyDone ? 'bg-emerald-500 text-white'
+                                                                    : bonusClaimed || baseClaimed ? 'bg-emerald-100 text-emerald-600'
                                                                     : isPending ? 'bg-amber-100 text-amber-600'
                                                                     : isRejected ? 'bg-red-100 text-red-600'
                                                                     : 'bg-gray-100 text-gray-400 dark:bg-[var(--color-dark-border)]'
                                                                 }`}>
-                                                                    {isApproved ? <CheckCircle2 size={14} /> :
+                                                                    {fullyDone ? <CheckCircle2 size={14} /> :
+                                                                     bonusClaimed || baseClaimed ? <CheckCircle2 size={14} /> :
                                                                      isPending ? <Clock size={14} /> :
                                                                      isRejected ? <XCircle size={14} /> :
                                                                      <Sparkles size={14} />}
                                                                 </div>
                                                                 <div className="min-w-0">
-                                                                    <p className={`text-sm font-bold ${isApproved ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-gray-100'}`}>
+                                                                    <p className={`text-sm font-bold ${fullyDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
                                                                         {task.title_lv}
                                                                     </p>
                                                                 </div>
                                                             </div>
-                                                            <span className={`text-[10px] font-black shrink-0 ml-2 ${isApproved ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                                                {isApproved ? 'IEGŪTS' : `+${task.xp_amount} XP`}
-                                                            </span>
+                                                            <div className="flex flex-col items-end shrink-0 ml-2 gap-0.5">
+                                                                <span className={`text-[10px] font-black ${baseClaimed ? 'text-emerald-500' : 'text-gray-400'}`}>
+                                                                    {baseClaimed ? `✓ +${baseXp}` : `+${baseXp} bāze`}
+                                                                </span>
+                                                                <span className={`text-[10px] font-black ${bonusClaimed ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                                                    {bonusClaimed ? `✓ +${bonusXp}` : `+${bonusXp} bonuss`}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        {task.description_lv && (
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9 line-clamp-3">{task.description_lv}</p>
+                                                        {task.description_lv && !fullyDone && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9 line-clamp-2">{task.description_lv}</p>
                                                         )}
                                                         {isPending && (
-                                                            <p className="text-[10px] font-bold text-amber-600 mt-2 ml-9 flex items-center gap-1"><Clock size={10} /> Pārbauda administrators</p>
+                                                            <p className="text-[10px] font-bold text-amber-600 mt-2 ml-9 flex items-center gap-1"><Clock size={10} /> Bonuss gaida admin pārbaudi</p>
                                                         )}
                                                         {isRejected && (
                                                             <p className="text-[10px] font-bold text-red-600 mt-2 ml-9">
-                                                                Noraidīts{sub?.admin_notes ? ` · ${sub.admin_notes}` : ''} — iesniedz atkārtoti
+                                                                Bonuss noraidīts{sub?.admin_notes ? ` · ${sub.admin_notes}` : ''} — iesniedz atkārtoti
                                                             </p>
                                                         )}
                                                     </button>
@@ -480,18 +541,26 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
             </div>
 
             {/* Submission modal */}
-            {selected && (
-                <TaskModal
-                    task={selected}
-                    proof={proof}
-                    setProof={setProof}
-                    submitting={submitting}
-                    error={error}
-                    successMsg={successMsg}
-                    onClose={closeModal}
-                    onSubmit={submit}
-                />
-            )}
+            {selected && (() => {
+                const sc = claimMap.get(selected.id) || {};
+                return (
+                    <TaskModal
+                        task={selected}
+                        proof={proof}
+                        setProof={setProof}
+                        submitting={submitting}
+                        claiming={claimingId === selected.id}
+                        baseClaimed={!!sc.base}
+                        bonusClaimed={!!sc.bonus}
+                        bonusPending={subMap.get(selected.id)?.status === 'pending'}
+                        error={error}
+                        successMsg={successMsg}
+                        onClose={closeModal}
+                        onSubmit={submit}
+                        onClaim={() => claim(selected.id)}
+                    />
+                );
+            })()}
         </>
     );
 }
@@ -501,13 +570,18 @@ interface TaskModalProps {
     proof: string;
     setProof: (s: string) => void;
     submitting: boolean;
+    claiming: boolean;
+    baseClaimed: boolean;
+    bonusClaimed: boolean;
+    bonusPending: boolean;
     error: string | null;
     successMsg: string | null;
     onClose: () => void;
     onSubmit: () => void;
+    onClaim: () => void;
 }
 
-function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClose, onSubmit }: TaskModalProps) {
+function TaskModal({ task, proof, setProof, submitting, claiming, baseClaimed, bonusClaimed, bonusPending, error, successMsg, onClose, onSubmit, onClaim }: TaskModalProps) {
     const [showInstructions, setShowInstructions] = useState(true);
     const [showTemplate, setShowTemplate] = useState(false);
     const [copied, setCopied] = useState<'template' | 'forum' | null>(null);
@@ -551,7 +625,7 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
     })();
 
     return (
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
             <div
                 className="bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-gray-100 dark:border-[var(--color-dark-border)] my-6"
                 onClick={(e) => e.stopPropagation()}
@@ -562,9 +636,16 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                             Tier {task.tier} · {TIER_LABELS[task.tier]}
                         </p>
-                        <h3 className="text-lg md:text-xl font-black text-gray-900 dark:text-gray-100 mt-1">{task.title_lv}</h3>
+                        <h3 className="text-lg md:text-xl font-black text-gray-900 mt-1">{task.title_lv}</h3>
                     </div>
-                    <span className="text-sm font-black text-amber-500 shrink-0">+{task.xp_amount} XP</span>
+                    <div className="flex flex-col items-end shrink-0 gap-1">
+                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${baseClaimed ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                            {baseClaimed ? `✓ Bāze +${task.base_xp ?? 0}` : `Bāze +${task.base_xp ?? 0}`}
+                        </span>
+                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${bonusClaimed ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700'}`}>
+                            {bonusClaimed ? `✓ Bonuss +${task.bonus_xp ?? 0}` : `Bonuss +${task.bonus_xp ?? 0}`}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Description */}
@@ -610,11 +691,11 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                                                                 Solis {i + 1} · {label}
                                                             </span>
                                                         </div>
-                                                        <p className="text-[13px] font-bold text-gray-900 dark:text-gray-100 mt-0.5 leading-snug">
+                                                        <p className="text-[13px] font-bold text-gray-900 mt-0.5 leading-snug">
                                                             {s.title}
                                                         </p>
                                                         {s.body && (
-                                                            <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 dark:text-gray-300 font-sans mt-2">
+                                                            <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 font-sans mt-2">
                                                                 {s.body}
                                                             </pre>
                                                         )}
@@ -650,9 +731,55 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                     </div>
                 )}
 
-                {/* Forum CTA + post template */}
+                {/* Base claim — instant XP for learning the material */}
+                <div className={`mb-4 rounded-2xl border p-4 ${
+                    baseClaimed
+                        ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700'
+                        : 'border-emerald-200 bg-white dark:bg-[var(--color-dark-surface)] dark:border-[var(--color-dark-border)]'
+                }`}>
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
+                                1. solis · Mācies
+                            </p>
+                            <p className="text-sm font-bold text-gray-900 mt-1">
+                                {baseClaimed
+                                    ? `Bāzes XP saņemti — ${task.base_xp ?? 0} XP`
+                                    : `Izlasi materiālu augstāk, tad saņem ${task.base_xp ?? 0} XP uzreiz.`}
+                            </p>
+                            {!baseClaimed && (
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                    Bez pierādījuma, bez admin pārbaudes — tikai izpratne.
+                                </p>
+                            )}
+                        </div>
+                        <button
+                            onClick={onClaim}
+                            disabled={baseClaimed || claiming}
+                            className={`px-4 py-2 rounded-xl text-xs font-black shrink-0 transition-all ${
+                                baseClaimed
+                                    ? 'bg-emerald-500 text-white cursor-default'
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-60'
+                            }`}
+                        >
+                            {baseClaimed ? `✓ +${task.base_xp ?? 0} XP` : claiming ? 'Pieprasa...' : `Esmu apguvis · +${task.base_xp ?? 0} XP`}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Bonus claim — forum post for the bigger reward */}
                 {task.forum_url && (
-                    <div className="mb-4 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3">
+                    <div className="mb-4 rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/10 p-4">
+                        <p className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest mb-1">
+                            🎁 2. solis · Bonuss forumā · +{task.bonus_xp ?? 0} XP
+                        </p>
+                        <p className="text-sm font-bold text-gray-900 mb-3">
+                            {bonusClaimed
+                                ? `Bonuss iegūts — ${task.bonus_xp ?? 0} XP par foruma postu.`
+                                : bonusPending
+                                    ? 'Tavs foruma posts pārbaudē pie administratora.'
+                                    : 'Publicē savu pieredzi, pārdomas vai jautājumu forumā un saņem lielāku atlīdzību.'}
+                        </p>
                         <div className="flex items-center justify-between gap-3 mb-2">
                             <span className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
                                 <MessageSquare size={14} />
@@ -694,45 +821,46 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                     </div>
                 )}
 
-                {/* Proof input */}
-                <div className="mb-4">
-                    <label
-                        className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-                        title={
-                            task.proof_type === 'tx_hash'
-                                ? 'On-chain transakcijas identifikators (0x + 64 simboli)'
-                                : task.requires_forum_proof
-                                    ? 'Saite uz tavu postu platforma.100x.lv'
-                                    : 'Publiska URL, ko admin var atvērt'
-                        }
-                    >
-                        {task.proof_type === 'tx_hash' ? 'Transakcijas hash' : 'Pierādījuma URL'}
-                        <Info size={11} className="text-gray-300" />
-                    </label>
-                    <input
-                        type="text"
-                        value={proof}
-                        onChange={(e) => setProof(e.target.value)}
-                        placeholder={task.proof_hint_lv || 'https://...'}
-                        className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-[var(--color-dark-bg)] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 text-sm transition-colors ${
-                            proofWarning
-                                ? 'border-amber-400 focus:ring-amber-200 focus:border-amber-500'
-                                : 'border-gray-200 dark:border-[var(--color-dark-border)] focus:ring-emerald-300 focus:border-emerald-400'
-                        }`}
-                        autoFocus
-                    />
-                    {proofWarning ? (
-                        <p className="text-[11px] font-medium text-amber-600 mt-1.5">⚠ {proofWarning}</p>
-                    ) : task.proof_hint_lv ? (
-                        <p className="text-[10px] text-gray-400 mt-1.5">{task.proof_hint_lv}</p>
-                    ) : null}
-                </div>
+                {/* Proof input — only shown when bonus not yet claimed */}
+                {!bonusClaimed && (
+                    <div className="mb-4">
+                        <label
+                            className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
+                            title={
+                                task.proof_type === 'tx_hash'
+                                    ? 'On-chain transakcijas identifikators (0x + 64 simboli)'
+                                    : task.requires_forum_proof
+                                        ? 'Saite uz tavu postu platforma.100x.lv'
+                                        : 'Publiska URL, ko admin var atvērt'
+                            }
+                        >
+                            {task.proof_type === 'tx_hash' ? 'Transakcijas hash' : 'Pierādījuma URL (bonusam)'}
+                            <Info size={11} className="text-gray-300" />
+                        </label>
+                        <input
+                            type="text"
+                            value={proof}
+                            onChange={(e) => setProof(e.target.value)}
+                            placeholder={task.proof_hint_lv || 'https://...'}
+                            className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-[var(--color-dark-bg)] text-gray-900 focus:outline-none focus:ring-2 text-sm transition-colors ${
+                                proofWarning
+                                    ? 'border-amber-400 focus:ring-amber-200 focus:border-amber-500'
+                                    : 'border-gray-200 dark:border-[var(--color-dark-border)] focus:ring-amber-300 focus:border-amber-400'
+                            }`}
+                        />
+                        {proofWarning ? (
+                            <p className="text-[11px] font-medium text-amber-600 mt-1.5">⚠ {proofWarning}</p>
+                        ) : task.proof_hint_lv ? (
+                            <p className="text-[10px] text-gray-400 mt-1.5">{task.proof_hint_lv}</p>
+                        ) : null}
+                    </div>
+                )}
 
-                {!task.auto_approve && (
+                {!task.auto_approve && !bonusClaimed && (
                     <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
                         <Lock size={14} className="text-amber-600 shrink-0 mt-0.5" />
                         <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
-                            Šo pārbauda administrators. XP tiek piešķirts pēc apstiprinājuma.
+                            Bonusu pārbauda administrators. Bonus XP tiek piešķirts pēc apstiprinājuma.
                         </p>
                     </div>
                 )}
@@ -752,12 +880,14 @@ function TaskModal({ task, proof, setProof, submitting, error, successMsg, onClo
                     <button
                         onClick={onClose}
                         className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-[var(--color-dark-border)] text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[var(--color-dark-bg)]"
-                    >Atcelt</button>
-                    <button
-                        onClick={onSubmit}
-                        disabled={submitting || !proofLooksValid}
-                        className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 disabled:opacity-50"
-                    >{submitting ? 'Iesniedz...' : 'Iesniegt'}</button>
+                    >{bonusClaimed ? 'Aizvērt' : 'Atcelt'}</button>
+                    {!bonusClaimed && (
+                        <button
+                            onClick={onSubmit}
+                            disabled={submitting || !proofLooksValid}
+                            className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 disabled:opacity-50"
+                        >{submitting ? 'Iesniedz...' : `Iesniegt bonusam · +${task.bonus_xp ?? 0} XP`}</button>
+                    )}
                 </div>
             </div>
         </div>

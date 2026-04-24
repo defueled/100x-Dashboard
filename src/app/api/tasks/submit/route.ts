@@ -124,7 +124,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: upsertErr.message }, { status: 500 });
     }
 
-    // If auto-approved, award XP immediately
+    // If auto-approved, award BONUS XP immediately (base XP is a separate /claim call)
+    const bonusXp = Number(task.bonus_xp ?? task.xp_amount ?? 0);
     let awardedXp = 0;
     if (autoApprove) {
         const { data: alreadyClaimed } = await supabase
@@ -132,22 +133,24 @@ export async function POST(req: Request) {
             .select('task_id')
             .eq('user_email', email)
             .eq('task_id', taskId)
+            .eq('claim_type', 'bonus')
             .maybeSingle();
 
-        if (!alreadyClaimed) {
+        if (!alreadyClaimed && bonusXp > 0) {
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('total_xp')
                 .eq('email', email)
                 .maybeSingle();
-            const newTotalXp = Number(profile?.total_xp || 0) + Number(task.xp_amount);
+            const newTotalXp = Number(profile?.total_xp || 0) + bonusXp;
             const newLevel = Math.floor(Math.sqrt(newTotalXp / 100)) + 1;
 
             const [claimRes, updRes] = await Promise.all([
                 supabase.from('xp_claims').insert({
                     user_email: email,
                     task_id: taskId,
-                    xp_amount: task.xp_amount,
+                    xp_amount: bonusXp,
+                    claim_type: 'bonus',
                 }),
                 supabase.from('profiles').update({
                     total_xp: newTotalXp,
@@ -156,7 +159,7 @@ export async function POST(req: Request) {
             ]);
 
             if (!claimRes.error && !updRes.error) {
-                awardedXp = task.xp_amount;
+                awardedXp = bonusXp;
                 void syncUserToGHL(email, { total_xp: newTotalXp, level: newLevel });
             }
         }
@@ -167,7 +170,7 @@ export async function POST(req: Request) {
         status: newStatus,
         awardedXp,
         message: autoApprove
-            ? `Pierādījums apstiprināts. +${awardedXp} XP`
+            ? `Forumā pierādījums apstiprināts. +${awardedXp} XP bonuss`
             : 'Pierādījums iesniegts izskatīšanai',
     });
 }
