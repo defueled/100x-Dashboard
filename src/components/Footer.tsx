@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import { useT } from "@/i18n/LangProvider";
 
 export function Footer() {
+    const t = useT();
     return (
         <footer className="bg-[var(--color-background)] py-16 px-6 border-t border-brand-dark/10 relative overflow-hidden">
             {/* Background Blobs */}
@@ -16,10 +20,10 @@ export function Footer() {
                         height={40}
                         className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
                     />
-                    <p className="text-xs text-brand-dark/50 mt-2 font-medium tracking-wide">© 2026 Pratības Portāls.</p>
+                    <p className="text-xs text-brand-dark/50 mt-2 font-medium tracking-wide">{t("footer.tagline")}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <p className="text-xs text-brand-dark/50 font-medium">Pievienojies kopienai:</p>
+                    <p className="text-xs text-brand-dark/50 font-medium">{t("footer.join")}</p>
                     <a
                         href="https://t.me/+AzkOgTHpNENmYjU0"
                         target="_blank"
@@ -35,10 +39,10 @@ export function Footer() {
             </div>
             {/* Bottom Section */}
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 mt-12 pt-8 border-t border-brand-dark/10">
-                <p className="text-sm">© {new Date().getFullYear()} 100x.lv. Visas tiesības aizsargātas.</p>
+                <p className="text-sm">{t("footer.rights").replace("2026", String(new Date().getFullYear()))}</p>
                 <div className="flex gap-6 text-sm">
-                    <a href="#" className="hover:text-[#59b687] transition-colors">Noteikumi</a>
-                    <a href="#" className="hover:text-[#59b687] transition-colors">Privātums</a>
+                    <a href="#" className="hover:text-[#59b687] transition-colors">{t("footer.terms")}</a>
+                    <a href="#" className="hover:text-[#59b687] transition-colors">{t("footer.privacy")}</a>
                 </div>
             </div>
         </footer>

@@ -5,22 +5,18 @@ const parser = new Parser();
 
 const TOPICS = {
     ai: [
-        'https://techcrunch.com/category/artificial-intelligence/feed/',
-        'https://venturebeat.com/category/ai/feed/',
-        'https://www.wired.com/feed/tag/ai/latest/rss',
-        'https://news.google.com/rss/search?q=artificial+intelligence+AI+LLM&hl=en-US&gl=US&ceid=US:en'
+        'https://news.google.com/rss/search?q=Base+chain+OR+Coinbase+Base+OR+onchain+AI+agents&hl=en-US&gl=US&ceid=US:en',
+        'https://decrypt.co/feed',
+        'https://www.coindesk.com/arc/outboundfeeds/rss/',
     ],
     tradfi: [
-        'https://www.cnbc.com/id/10000664/device/rss/rss.html',
-        'https://fortune.com/feed',
-        'https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml',
-        'https://news.google.com/rss/search?q=stock+market+finance+economy&hl=en-US&gl=US&ceid=US:en'
+        'https://news.google.com/rss/search?q=crypto+ETF+OR+Bitcoin+ETF+OR+tokenization+finance&hl=en-US&gl=US&ceid=US:en',
+        'https://www.coindesk.com/arc/outboundfeeds/rss/',
     ],
     web3: [
-        'https://www.coindesk.com/arc/outboundfeeds/rss/',
+        'https://news.google.com/rss/search?q=Base+chain+OR+Coinbase+OR+airdrop+OR+onchain&hl=en-US&gl=US&ceid=US:en',
         'https://cointelegraph.com/rss',
         'https://decrypt.co/feed',
-        'https://news.google.com/rss/search?q=crypto+web3+blockchain+bitcoin+ethereum&hl=en-US&gl=US&ceid=US:en'
     ]
 };
 

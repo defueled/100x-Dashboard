@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
 
 const testimonials = [
     {
@@ -35,19 +36,21 @@ export function Testimonials() {
             <div className="absolute bottom-0 left-[-5%] w-[30vw] h-[30vw] bg-brand-green/10 blur-[100px] rounded-full animate-float pointer-events-none" />
 
             <div className="max-w-6xl mx-auto relative z-10">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                    <div className="w-12 h-[2px] bg-brand-green/40" />
-                    <span className="text-xs font-bold text-brand-green tracking-[0.3em] uppercase">Kopienas balss</span>
-                    <div className="w-12 h-[2px] bg-brand-green/40" />
-                </div>
-                <h3 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 text-center">
-                    Atsauksmes
-                </h3>
-                <p className="text-center text-brand-dark/40 text-sm mb-16 max-w-lg mx-auto">
-                    Reālas atsauksmes no mūsu kopienas dalībniekiem
-                </p>
+                <ScrollReveal variant="blurFadeIn">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="w-12 h-[2px] bg-brand-green/40" />
+                        <span className="text-xs font-bold text-brand-green tracking-[0.3em] uppercase">Kopienas balss</span>
+                        <div className="w-12 h-[2px] bg-brand-green/40" />
+                    </div>
+                    <h3 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 text-center">
+                        Atsauksmes
+                    </h3>
+                    <p className="text-center text-brand-dark/40 text-sm mb-16 max-w-lg mx-auto">
+                        Reālas atsauksmes no mūsu kopienas dalībniekiem
+                    </p>
+                </ScrollReveal>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8" staggerDelay={0.12}>
                     {testimonials.map((t, idx) => {
                         const isExpanded = expandedIdx === idx;
                         const isLong = t.quote.length > 200;
@@ -56,9 +59,9 @@ export function Testimonials() {
                             : t.quote;
 
                         return (
+                            <StaggerItem key={idx}>
                             <div
-                                key={idx}
-                                className="group relative bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-brand-dark/5 shadow-sm hover:shadow-lg hover:border-brand-green/20 transition-all duration-300"
+                                className="group relative bg-white/70 backdrop-blur-sm rounded-2xl p-8 border border-brand-dark/5 shadow-sm hover:shadow-lg hover:border-brand-green/20 transition-all duration-300 hover:-translate-y-1"
                             >
                                 {/* Facebook icon */}
                                 <div className="absolute top-6 right-6">
@@ -95,9 +98,10 @@ export function Testimonials() {
                                     </div>
                                 </div>
                             </div>
+                            </StaggerItem>
                         );
                     })}
-                </div>
+                </StaggerContainer>
             </div>
         </section>
     );

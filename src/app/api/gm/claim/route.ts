@@ -24,10 +24,10 @@ export async function POST(req: Request) {
         const supabase = getSupabase();
         const now = new Date();
 
-        // GM cooldown: 10 hours between claims. Streak still increments per
+        // GM cooldown: 12 hours between claims. Streak still increments per
         // claim (not per calendar day), capped at 100.
-        const COOLDOWN_MS = 10 * 60 * 60 * 1000;
-        // Streak window: claim within 2× cooldown to keep streak alive.
+        const COOLDOWN_MS = 12 * 60 * 60 * 1000;
+        // Streak window: claim within 2× cooldown (24h) to keep streak alive.
         const STREAK_WINDOW_MS = 2 * COOLDOWN_MS;
 
         // 1. Get current profile
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
         void syncUserToGHL(email, { total_xp: newTotalXp, gm_streak: newStreak, level: newLevel });
 
         // 5. Record claim in xp_claims. Use timestamped ID so a user can
-        //    have multiple GM rows per day under the 10h cooldown.
+        //    have multiple GM rows per day under the 12h cooldown.
         const taskId = `gm_${now.toISOString()}`;
 
         await supabase

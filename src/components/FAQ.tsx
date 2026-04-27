@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
 
 const faqs = [
     {
@@ -68,19 +69,19 @@ export function FAQ() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
 
-            <div className="text-center mb-16">
+            <ScrollReveal variant="blurFadeIn" className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark mb-4">
                     Biežāk Uzdotie Jautājumi
                 </h2>
                 <p className="text-xl font-medium text-brand-dark/60">
                     Viss, kas tev jāzina par 100x.lv platformu un komūnu.
                 </p>
-            </div>
+            </ScrollReveal>
 
-            <div className="space-y-4">
+            <StaggerContainer className="space-y-4" staggerDelay={0.08}>
                 {faqs.map((faq, index) => (
+                    <StaggerItem key={index}>
                     <div
-                        key={index}
                         className="glass-card rounded-2xl overflow-hidden transition-all duration-300"
                     >
                         <button
@@ -102,8 +103,9 @@ export function FAQ() {
                             </p>
                         </div>
                     </div>
+                    </StaggerItem>
                 ))}
-            </div>
+            </StaggerContainer>
         </section>
     );
 }

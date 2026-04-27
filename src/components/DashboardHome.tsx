@@ -110,8 +110,8 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     const displayMultiplier = `${seasonMultiplier}x`;
     const totalXp = profileData?.total_xp || dbProgress.reduce((sum, p) => sum + (p.xp_earned || p.xp_amount || 0), 0);
 
-    // GM cooldown: 10 hours since last claim (not calendar day).
-    const GM_COOLDOWN_MS = 10 * 60 * 60 * 1000;
+    // GM cooldown: 12 hours since last claim (not calendar day).
+    const GM_COOLDOWN_MS = 12 * 60 * 60 * 1000;
     const lastGmMs = (() => {
         if (gmData?.lastGmAt) return new Date(gmData.lastGmAt).getTime();
         if (profileData?.last_gm_at) return new Date(profileData.last_gm_at).getTime();
@@ -119,7 +119,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
     })();
     const isClaimedToday = Boolean(gmData?.success) || (lastGmMs > 0 && Date.now() - lastGmMs < GM_COOLDOWN_MS);
 
-    // Live countdown to next GM window (last_gm_at + 10h).
+    // Live countdown to next GM window (last_gm_at + 12h).
     useEffect(() => {
         const tick = () => {
             if (!lastGmMs) { setCountdown(''); return; }
@@ -323,9 +323,9 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                         </div>
                         <div className="space-y-3">
                             {(() => {
-                                // GM is "done" if claimed within the last 10h, not just per React state.
+                                // GM is "done" if claimed within the last 12h, not just per React state.
                                 const lastGm = profileData?.last_gm_at ? new Date(profileData.last_gm_at).getTime() : 0;
-                                const gmOnCooldown = Boolean(gmData?.success) || (lastGm > 0 && Date.now() - lastGm < 10 * 60 * 60 * 1000);
+                                const gmOnCooldown = Boolean(gmData?.success) || (lastGm > 0 && Date.now() - lastGm < 12 * 60 * 60 * 1000);
                                 // Onboarding counts as done if the profile has the flag OR they already
                                 // have goals/skill_level filled (legacy rows without the flag).
                                 const onboardingDone = Boolean(
@@ -334,7 +334,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                                     profileData?.skill_level
                                 );
                                 return [
-                                    { t: 'Saki GM — saņem +100 XP', c: 'Ik pēc 10h', xp: 100, done: gmOnCooldown },
+                                    { t: 'Saki GM — saņem +100 XP', c: 'Ik pēc 12h', xp: 100, done: gmOnCooldown },
                                     { t: 'Pievieno EVM adresi profilā', c: 'Airdrop setup', xp: 100, done: Boolean(profileData?.evm_address) },
                                     { t: 'Aizpildi onboarding anketu', c: 'Profils · +50 XP', xp: 50, done: onboardingDone },
                                 ];

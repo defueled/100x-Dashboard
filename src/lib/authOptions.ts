@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { createClient } from '@supabase/supabase-js';
+import { isAdminEmail } from '@/lib/admin';
 
 // Helper: Initialize Supabase lazily
 function getSupabase() {
@@ -262,6 +263,9 @@ export const authOptions: NextAuthOptions = {
                     // @ts-ignore
                     session.user.ghl_tags = data.socials?.ghl_tags || [];
                 }
+                // Admin allow-list bypass — resolved server-side from ADMIN_EMAILS env.
+                // @ts-ignore
+                session.user.is_admin = isAdminEmail(session.user.email);
             }
             return session;
         },

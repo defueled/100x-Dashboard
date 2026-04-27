@@ -217,3 +217,18 @@
   /* Custom glow shadows from globals — dim them too. */
   .dark .hover\:shadow-glow-green:hover { box-shadow: 0 0 15px rgba(89,182,135,0.15) !important; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-delayed,
+  .animate-pulse-slow,
+  .animate-gradient-flow {
+    animation: none !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

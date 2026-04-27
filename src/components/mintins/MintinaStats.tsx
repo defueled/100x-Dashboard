@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Coins, Gem } from 'lucide-react';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { Wallet } from 'lucide-react';
 
 interface MintinaStatsProps {
     evmAddress?: string;
@@ -46,7 +46,6 @@ export function MintinaStats({ evmAddress, totalXp, seasonMultiplier }: MintinaS
 export function MintinaBalanceChip({ evmAddress }: { evmAddress?: string }) {
     const [mintinsBalance, setMintinsBalance] = useState<number | null>(null);
     const [balanceLoading, setBalanceLoading] = useState(false);
-    const { openConnectModal } = useConnectModal();
 
     useEffect(() => {
         if (!evmAddress) return;
@@ -60,13 +59,10 @@ export function MintinaBalanceChip({ evmAddress }: { evmAddress?: string }) {
 
     if (!evmAddress) {
         return (
-            <button
-                onClick={openConnectModal}
-                className="px-4 py-2 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors cursor-pointer"
-            >
-                <Coins size={16} className="text-gray-300" />
-                <span className="text-xs font-bold text-gray-400">Pievieno maku → MNTŠ</span>
-            </button>
+            <div className="px-4 py-2 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-2">
+                <Wallet size={16} className="text-gray-300" />
+                <span className="text-xs font-bold text-gray-400">Pievieno maku profilā → MNTŠ</span>
+            </div>
         );
     }
 
@@ -90,14 +86,14 @@ export function MintinaAirdropCard({ totalXp, seasonMultiplier }: { totalXp: num
                 <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4">
                     <Coins className="text-indigo-500" size={24} />
                 </div>
-                <h3 className="text-lg font-black text-gray-900 mb-1 leading-tight">Mintiņš Airdrop</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Paredzamais (S1)</p>
+                <h3 className="text-lg font-black text-gray-900 mb-1 leading-tight">Airdrop Reizinātājs</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Mintiņš · Sezona 1</p>
             </div>
             <div className="space-y-1">
                 <p className="text-3xl font-black text-gray-900">{estimatedAirdrop.toLocaleString()}</p>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-500">
                     <Gem size={14} />
-                    <span>Reizinātājs: {displayMultiplier} 🚀</span>
+                    <span>Airdrop reizinātājs: {displayMultiplier} 🚀</span>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bot, Globe, BarChart3, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
 
 const topics = [
     {
@@ -109,14 +110,14 @@ export function TechEvolution() {
 
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
-            <div className="text-center mb-16">
+            <ScrollReveal variant="blurFadeIn" className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark mb-4">
                     Izproti nākotnes tehnoloģijas
                 </h2>
                 <p className="text-xl font-medium text-brand-dark/60 max-w-2xl mx-auto">
                     No idejas līdz pasaules revolūcijai. Apgūsti kontekstu — kur esam bijuši, kur esam un kur ejam.
                 </p>
-            </div>
+            </ScrollReveal>
 
             {/* Topic Tabs */}
             <div className="flex flex-wrap gap-3 justify-center mb-12">
@@ -140,11 +141,11 @@ export function TechEvolution() {
             </div>
 
             {/* Timeline Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6" staggerDelay={0.15}>
                 {topic.phases.map((phase, index) => (
+                    <StaggerItem key={index}>
                     <div
-                        key={index}
-                        className={`glass-card rounded-3xl p-8 border ${topic.borderColor} shadow-premium hover:-translate-y-1 transition-all duration-300 relative overflow-hidden`}
+                        className={`glass-card rounded-3xl p-8 border ${topic.borderColor} shadow-premium hover:-translate-y-1 transition-all duration-300 relative overflow-hidden h-full`}
                     >
                         {/* Phase number watermark */}
                         <div className={`absolute -right-4 -top-4 text-8xl font-black opacity-5 ${topic.color}`}>
@@ -171,8 +172,9 @@ export function TechEvolution() {
                             </div>
                         )}
                     </div>
+                    </StaggerItem>
                 ))}
-            </div>
+            </StaggerContainer>
         </section>
     );
 }

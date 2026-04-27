@@ -1,5 +1,6 @@
 'use client';
 import Script from 'next/script';
+import { ScrollReveal } from "./scroll";
 
 export function CheckoutSection() {
     return (
@@ -9,7 +10,7 @@ export function CheckoutSection() {
             <div className="bg-blob bg-brand-blue w-[30vw] h-[30vw] bottom-0 right-[-5%] opacity-10" />
 
             <div className="max-w-2xl mx-auto relative z-10">
-                <div className="text-center mb-12">
+                <ScrollReveal variant="blurFadeIn" className="text-center mb-12">
                     <span className="inline-block px-4 py-1.5 bg-brand-green/10 text-brand-green text-xs font-bold uppercase tracking-widest rounded-full mb-4">
                         Pievienojies tagad
                     </span>
@@ -20,8 +21,9 @@ export function CheckoutSection() {
                     <p className="text-brand-dark/60 text-lg max-w-md mx-auto">
                         Iestājies 100x komūnā par sev piemērotu summu. Piekļūsti visam saturam, AI rīkiem un cilvēkiem.
                     </p>
-                </div>
+                </ScrollReveal>
 
+                <ScrollReveal variant="scaleUp" delay={0.15}>
                 <div className="glass-card rounded-[2rem] overflow-hidden shadow-premium">
                     <iframe
                         src="https://updates.maverick.lv/widget/form/o29v27nzeMeAkOqO8Pwj"
@@ -41,6 +43,7 @@ export function CheckoutSection() {
                         title="Jaunais pietiekums — maksā cik vēlies"
                     />
                 </div>
+                </ScrollReveal>
             </div>
 
             <Script

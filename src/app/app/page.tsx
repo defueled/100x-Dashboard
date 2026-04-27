@@ -12,17 +12,25 @@ export default function AppPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
+    // Only explicit `true` counts as "subscribed". Anything else (false, null,
+    // undefined, stale/error session) sends the user to the paywall — fail
+    // closed, not open. Subscriber state is written in the NextAuth session
+    // callback from the real GHL `abonements💰` tag. Admins (ADMIN_EMAILS env)
+    // bypass the paywall entirely.
+    const user = session?.user as { is_subscribed?: boolean; is_admin?: boolean } | undefined;
+    const isSubscribed = user?.is_subscribed === true;
+    const isAdmin = user?.is_admin === true;
+    const hasAccess = isSubscribed || isAdmin;
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.replace("/");
             return;
         }
-        // Non-subscribers → paywall. Subscriber state is set in the NextAuth
-        // session callback from the real GHL `abonements💰` tag.
-        if (status === "authenticated" && (session?.user as any)?.is_subscribed === false) {
+        if (status === "authenticated" && !hasAccess) {
             router.replace("/subscribe");
         }
-    }, [status, session, router]);
+    }, [status, hasAccess, router]);
 
     if (status === "loading") {
         return (
@@ -35,7 +43,15 @@ export default function AppPage() {
         );
     }
 
-    if (!session) return null;
+    // Hide the dashboard while the paywall redirect is in flight — prevents
+    // a flash of /app content before the router navigates to /subscribe.
+    if (!session || !hasAccess) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-[#F8FAF9]">
+                <div className="w-8 h-8 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <Web3Provider>

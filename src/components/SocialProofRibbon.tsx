@@ -1,8 +1,13 @@
-import { Users, Star, TrendingUp } from "lucide-react";
+"use client";
+
+import { Star, TrendingUp } from "lucide-react";
+import { ScrollReveal } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function SocialProofRibbon() {
+    const t = useT();
     return (
-        <section className="relative z-20 -mt-10 mb-20 px-4 md:px-0 max-w-5xl mx-auto">
+        <ScrollReveal variant="fadeUp" className="relative z-20 -mt-10 mb-20 px-4 md:px-0 max-w-5xl mx-auto">
             <div className="glass-card rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-premium">
 
                 {/* User Avatars & Count */}
@@ -22,8 +27,8 @@ export function SocialProofRibbon() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-brand-dark">Pievienojies viedajai komūnai</p>
-                        <p className="text-xs text-brand-dark/60 font-medium">Uzņēmēji, investori un tech entuziasti</p>
+                        <p className="text-sm font-bold text-brand-dark">{t("social.community")}</p>
+                        <p className="text-xs text-brand-dark/60 font-medium">{t("social.community.sub")}</p>
                     </div>
                 </div>
 
@@ -37,7 +42,7 @@ export function SocialProofRibbon() {
                         ))}
                     </div>
                     <div className="text-sm font-bold text-brand-dark">
-                        4.9/5 <span className="font-normal text-brand-dark/60">Novērtējums</span>
+                        4.9/5 <span className="font-normal text-brand-dark/60">{t("social.rating")}</span>
                     </div>
                 </div>
 
@@ -49,12 +54,12 @@ export function SocialProofRibbon() {
                         <TrendingUp size={20} />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-brand-dark">Pārbaudītas metodikas</p>
-                        <p className="text-xs text-brand-dark/60 font-medium">Praktiski soļi un AI rīki</p>
+                        <p className="text-sm font-bold text-brand-dark">{t("social.methods")}</p>
+                        <p className="text-xs text-brand-dark/60 font-medium">{t("social.methods.sub")}</p>
                     </div>
                 </div>
 
             </div>
-        </section>
+        </ScrollReveal>
     );
 }

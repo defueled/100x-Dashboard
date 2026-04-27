@@ -113,8 +113,6 @@ export function DashboardSection() {
     const sectionRef = useRef<HTMLElement>(null);
     const router = useRouter();
     const { data: session, status } = useSession();
-    const [isTimedOut, setIsTimedOut] = useState(false);
-
     const { scrollYProgress } = useScroll({
         target: sectionRef,
         offset: ["start start", "end start"],
@@ -122,27 +120,8 @@ export function DashboardSection() {
     const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
     const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-    useEffect(() => {
-        if (status === "loading") {
-            const t = setTimeout(() => setIsTimedOut(true), 3000);
-            return () => clearTimeout(t);
-        }
-    }, [status]);
-
-    // Loading state
-    if (status === "loading" && !isTimedOut) {
-        return (
-            <section ref={sectionRef} className="h-screen w-full relative bg-[#f8fafc] z-50 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 rounded-full border-4 border-brand-green/20 border-t-brand-green animate-spin" />
-                    <p className="text-xs font-medium text-muted">Checking access...</p>
-                </div>
-            </section>
-        );
-    }
-
-    // Not logged in
-    if (!session) {
+    // Show login button immediately — no 3s wait
+    if (status === "loading" || !session) {
         return (
             <LookingGlassSection sectionRef={sectionRef}>
                 <div className="w-20 h-20 bg-white shadow-xl rounded-3xl flex items-center justify-center mb-6">
@@ -165,30 +144,7 @@ export function DashboardSection() {
         );
     }
 
-    // @ts-ignore
-    const isSubscribed = session?.user?.is_subscribed;
-
-    // Logged in but no subscription
-    if (!isSubscribed) {
-        return (
-            <LookingGlassSection sectionRef={sectionRef}>
-                <div className="w-20 h-20 bg-white shadow-xl rounded-3xl flex items-center justify-center mb-6 border-2 border-red-500/20">
-                    <Lock className="w-10 h-10 text-red-500" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                    Nav Aktīva Abonementa
-                </h2>
-                <p className="text-gray-600 font-medium mb-8">
-                    Šim kontam <strong className="text-brand-dark">({session.user?.email})</strong> vēl nav aktīvs 100x abonements.
-                </p>
-                <button className="px-8 py-4 bg-gradient-to-r from-brand-blue to-brand-green text-white font-bold rounded-full hover:scale-105 transition-transform shadow-lg shadow-brand-green/20">
-                    Iegādāties Abonementu
-                </button>
-            </LookingGlassSection>
-        );
-    }
-
-    // Subscribed — teaser with CTA to /app
+    // Logged in — show dashboard CTA
     return (
         <motion.section
             ref={sectionRef}
