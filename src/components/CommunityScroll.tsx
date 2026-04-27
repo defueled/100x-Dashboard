@@ -2,8 +2,10 @@
 
 import { MessageSquare, Video, CalendarHeart, ArrowRight } from "lucide-react";
 import { ScrollReveal, ShimmerCard } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function CommunityScroll() {
+    const t = useT();
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
             <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-24">
@@ -11,13 +13,13 @@ export function CommunityScroll() {
                 {/* Text Content - Right Side */}
                 <ScrollReveal variant="slideRight" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10 text-brand-orange text-sm font-bold tracking-wide uppercase mb-2">
-                        Atbalsts visos līmeņos
+                        {t("comm.tag")}
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark leading-tight">
-                        Tu neesi <span className="text-brand-orange">viens.</span>
+                        {t("comm.title.a")} <span className="text-brand-orange">{t("comm.title.b")}</span>
                     </h2>
                     <p className="text-xl text-brand-dark/70 font-medium leading-relaxed">
-                        Neviens jautājums nav par vienkāršu. 100x forums ir vide, kur gan iesācēji, gan pieredzējuši investori atbalsta cits citu, un kur dalāmies ar aktuālajiem projektiem.
+                        {t("comm.subtitle")}
                     </p>
 
                     <ul className="space-y-5">
@@ -26,8 +28,8 @@ export function CommunityScroll() {
                                 <MessageSquare size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">Slēgtais forums un diskusijas</h4>
-                                <p className="text-brand-dark/60 font-medium">Tirgus izpēte, stratēģijas un analīze drošā vidē starp domubiedriem.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("comm.bullet1.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("comm.bullet1.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -35,8 +37,8 @@ export function CommunityScroll() {
                                 <Video size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">LIVE Zoom sesijas</h4>
-                                <p className="text-brand-dark/60 font-medium">Iknedēļas tematiskie vakari un brīvais mikrofons jautājumiem (Q/A).</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("comm.bullet2.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("comm.bullet2.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -44,8 +46,8 @@ export function CommunityScroll() {
                                 <CalendarHeart size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">1-pret-1 Konsultācijas</h4>
-                                <p className="text-brand-dark/60 font-medium">Bezmaksas sākuma konsultācija ar veidotājiem tava profila novērtēšanai.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("comm.bullet3.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("comm.bullet3.body")}</p>
                             </div>
                         </li>
                     </ul>
@@ -54,7 +56,7 @@ export function CommunityScroll() {
                         onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
                         className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
                     >
-                        Pievienoties komūnai
+                        {t("comm.cta")}
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </ScrollReveal>
@@ -107,8 +109,8 @@ export function CommunityScroll() {
                                 <div className="absolute top-0 right-0 w-3 h-3 bg-white rounded-full border-2 border-green-500"></div>
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-brand-dark">LIVE: Tirgus Analīze</p>
-                                <p className="text-[10px] text-brand-dark/60 font-medium">Pievienojušies 42 dībnieki</p>
+                                <p className="text-xs font-bold text-brand-dark">{t("comm.live.label")}</p>
+                                <p className="text-[10px] text-brand-dark/60 font-medium">{t("comm.live.sub")}</p>
                             </div>
                         </div>
                     </ShimmerCard>

@@ -2,8 +2,10 @@
 
 import { Bot, BarChart3, Globe, Users } from "lucide-react";
 import { ScrollReveal, StaggerContainer, StaggerItem, DotGrid, Spotlight } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function Description() {
+    const t = useT();
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative overflow-hidden z-10">
             {/* Dot Grid Background — WOW effect from Gorilla SOP */}
@@ -15,10 +17,10 @@ export function Description() {
 
             <ScrollReveal variant="blurFadeIn" className="text-center mb-16 relative z-10">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark mb-4">
-                    Tavs ceļvedis nākotnes tehnoloģijām
+                    {t("desc.h2")}
                 </h2>
                 <p className="text-xl font-medium text-brand-dark/70 max-w-2xl mx-auto">
-                    Mēs apvienojam AI, FinTech un Web3.0 vienuviet, piedāvājot strukturētas mācības un slēgtu komūnu.
+                    {t("desc.subtitle")}
                 </p>
             </ScrollReveal>
 
@@ -35,9 +37,9 @@ export function Description() {
                             <div className="w-14 h-14 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue mb-6">
                                 <Bot size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold text-brand-dark mb-3">AI Produktivitāte</h3>
+                            <h3 className="text-2xl font-bold text-brand-dark mb-3">{t("desc.card1.title")}</h3>
                             <p className="text-brand-dark/70 font-medium max-w-sm">
-                                Kā praktiski integrēt ChatGPT, Claude un citus AI rīkus tavā biznesā un ikdienā. No promptu inženierijas līdz lokalizācijai.
+                                {t("desc.card1.body")}
                             </p>
                         </div>
                     </Spotlight>
@@ -50,9 +52,9 @@ export function Description() {
                             <div className="w-14 h-14 rounded-2xl bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-6">
                                 <Users size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold text-brand-dark mb-3">Viedā Komūna</h3>
+                            <h3 className="text-2xl font-bold text-brand-dark mb-3">{t("desc.card2.title")}</h3>
                             <p className="text-brand-dark/70 font-medium mb-8">
-                                Droša vieta, kur dalīties pieredzē, uzdot jautājumus un saņemt atbalstu no zinošiem ekspertiem un citiem dalībniekiem slēgtā forumā.
+                                {t("desc.card2.body")}
                             </p>
                         </div>
 
@@ -84,9 +86,9 @@ export function Description() {
                             <div className="w-14 h-14 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green mb-6">
                                 <BarChart3 size={28} />
                             </div>
-                            <h3 className="text-xl font-bold text-brand-dark mb-2">DeFi & FinTech</h3>
+                            <h3 className="text-xl font-bold text-brand-dark mb-2">{t("desc.card3.title")}</h3>
                             <p className="text-sm font-medium text-brand-dark/70">
-                                Decentralizētās finanses un tradicionālie finanšu rīki modernai labklājībai.
+                                {t("desc.card3.body")}
                             </p>
                         </div>
                     </Spotlight>
@@ -102,9 +104,9 @@ export function Description() {
                             <div className="w-14 h-14 rounded-2xl bg-brand-dark/5 flex items-center justify-center text-brand-dark mb-6">
                                 <Globe size={28} />
                             </div>
-                            <h3 className="text-xl font-bold text-brand-dark mb-2">Web 3.0 Pasaule</h3>
+                            <h3 className="text-xl font-bold text-brand-dark mb-2">{t("desc.card4.title")}</h3>
                             <p className="text-sm font-medium text-brand-dark/70">
-                                Droša ienākšana kriptovalūtu, viedo līgumu un digitālo aktīvu ekosistēmā.
+                                {t("desc.card4.body")}
                             </p>
                         </div>
                     </Spotlight>

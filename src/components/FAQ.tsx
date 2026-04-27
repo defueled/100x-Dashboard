@@ -3,8 +3,23 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
+import { useLang } from "@/i18n/LangProvider";
 
-const faqs = [
+type FaqItem = { question: string; answer: string };
+
+const FAQS_EN: FaqItem[] = [
+    { question: "What is 100x.lv?", answer: "100x.lv is a Latvian smart community and skills portal built to help you master AI, Web3 and FinTech tools in a safe, structured environment. We combine video courses, live Zoom sessions, a private forum, and a gamification system." },
+    { question: "Do I need prior experience to join?", answer: "No. Our \"AI Beginner's Path\" module is designed specifically for people without prior experience. We walk through the basics step by step and help you apply them in practice." },
+    { question: "What is the difference between TradFi and DeFi?", answer: "TradFi (Traditional Finance) covers classic financial institutions — banks, brokers, insurers — that act as intermediaries and charge fees. DeFi (Decentralised Finance) is an open financial ecosystem on blockchain where loans, swaps and investments happen automatically through smart contracts, with no intermediaries. In the 100x community we teach how to use both safely." },
+    { question: "Where is the real business value of AI?", answer: "AI is the most powerful productivity tool in a modern operator's arsenal. It lets you automate repetitive tasks (emails, reports, customer support), generate marketing content in seconds, analyse data and make better decisions. A human with AI is 10x more productive — and at 100x we teach how to apply it in practice." },
+    { question: "How long does it take to learn the crypto and Web3 basics?", answer: "With our structured courses you can grasp the basics in 2–4 weeks, spending 1–2 hours per day. We recommend starting with the \"Crypto Beginner's Path\" module — it provides a solid theoretical base you can apply immediately with small risk." },
+    { question: "How does the XP / Level Up system work?", answer: "Every completed lesson and task awards XP. Once you accumulate enough you level up and unlock new perks: deeper courses, masterclasses, 1-on-1 consultations, and even DAO voting rights starting at Level 4." },
+    { question: "What is the DAO and how can I participate?", answer: "A DAO (Decentralised Autonomous Organisation) is a community governance model where decisions are made by members, not a single person. The 100x.lv DAO uses Snapshot — you propose ideas and vote on others. It's an exclusive perk for Level 4+ members." },
+    { question: "How do I access the private forum?", answer: "The private forum is exclusive to our registered members. You get access as soon as you join the platform. The forum hosts weekly market analysis, strategy sharing, and evaluation discussions with experienced investors." },
+    { question: "Are there in-person meetups?", answer: "Yes! The 100x DAO runs regular meetups in Latvia and trips to international crypto conferences. These are great opportunities to build real connections, share experience, and witness the Web3 movement up close." },
+];
+
+const faqs: FaqItem[] = [
     {
         question: "Kas ir 100x.lv?",
         answer: "100x.lv ir Latvijas viedā komūna un pratības portāls, kas izveidots, lai palīdzētu apgūt mākslīgā intelekta (AI), Web3 un FinTech rīkus drošā un strukturētā vidē. Mēs apvienojam video kursus, dzīvās Zoom sesijas, slēgto forumu un gamifikācijas sistēmu."
@@ -45,13 +60,16 @@ const faqs = [
 
 
 export function FAQ() {
+    const { locale, t } = useLang();
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    const items: FaqItem[] = locale === "en" ? FAQS_EN : faqs;
 
     // Schema.org struktūrdati (JSON-LD) priekš AEO (Answer Engine Optimization)
     const faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": faqs.map((faq) => ({
+        "mainEntity": items.map((faq) => ({
             "@type": "Question",
             "name": faq.question,
             "acceptedAnswer": {
@@ -71,15 +89,15 @@ export function FAQ() {
 
             <ScrollReveal variant="blurFadeIn" className="text-center mb-16">
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark mb-4">
-                    Biežāk Uzdotie Jautājumi
+                    {t("faq.h2")}
                 </h2>
                 <p className="text-xl font-medium text-brand-dark/60">
-                    Viss, kas tev jāzina par 100x.lv platformu un komūnu.
+                    {t("faq.subtitle")}
                 </p>
             </ScrollReveal>
 
             <StaggerContainer className="space-y-4" staggerDelay={0.08}>
-                {faqs.map((faq, index) => (
+                {items.map((faq, index) => (
                     <StaggerItem key={index}>
                     <div
                         className="glass-card rounded-2xl overflow-hidden transition-all duration-300"

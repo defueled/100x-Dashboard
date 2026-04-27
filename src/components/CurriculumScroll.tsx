@@ -2,8 +2,10 @@
 
 import { PlayCircle, FileText, CheckCircle, ArrowRight } from "lucide-react";
 import { ScrollReveal, ShimmerCard, StaggerContainer, StaggerItem } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function CurriculumScroll() {
+    const t = useT();
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-24">
@@ -11,13 +13,13 @@ export function CurriculumScroll() {
                 {/* Text Content - Left Side */}
                 <ScrollReveal variant="slideLeft" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 text-brand-green text-sm font-bold tracking-wide uppercase mb-2">
-                        Izglītības Moduļi
+                        {t("curr.tag")}
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark leading-tight">
-                        No pamatiem līdz <span className="text-gradient-premium">pro līmenim.</span>
+                        {t("curr.title.a")} <span className="text-gradient-premium">{t("curr.title.b")}</span>
                     </h2>
                     <p className="text-xl text-brand-dark/70 font-medium leading-relaxed">
-                        Iegūsti strukturētas zināšanas un apgūsti praktiskus rīkus. Mūsu kursi ved soli pa solim – sākot ar Web3 un kripto pamatiem, līdz pat DeFi, NFT un Mākslīgajam intelektam (AI).
+                        {t("curr.subtitle")}
                     </p>
 
                     <ul className="space-y-5">
@@ -26,8 +28,8 @@ export function CurriculumScroll() {
                                 <PlayCircle size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">Vairāk kā 20h video materiālu</h4>
-                                <p className="text-brand-dark/60 font-medium">Tiešsaistes kursi un meistarklases ar video un prezentācijām.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("curr.bullet1.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("curr.bullet1.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -35,8 +37,8 @@ export function CurriculumScroll() {
                                 <FileText size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">Pārbaudītas metodikas</h4>
-                                <p className="text-brand-dark/60 font-medium">DeFi aplikāciju un AI palīgrīku konkrētas, praktiskas pamācības.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("curr.bullet2.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("curr.bullet2.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -44,8 +46,8 @@ export function CurriculumScroll() {
                                 <CheckCircle size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">Praktiski uzdevumi</h4>
-                                <p className="text-brand-dark/60 font-medium">Mazāk teorijas, vairāk rīcības. Praktiski soļi, kas palīdz augt tavam portfelim.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("curr.bullet3.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("curr.bullet3.body")}</p>
                             </div>
                         </li>
                     </ul>
@@ -54,7 +56,7 @@ export function CurriculumScroll() {
                         onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
                         className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
                     >
-                        Abonēt ekosistēmas pieeju
+                        {t("curr.cta")}
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </ScrollReveal>
@@ -71,11 +73,11 @@ export function CurriculumScroll() {
                                 </div>
                             </div>
                         </div>
-                        <h4 className="font-bold text-brand-dark text-lg mb-2">Modulis: AI Iesācēja Ceļš</h4>
+                        <h4 className="font-bold text-brand-dark text-lg mb-2">{t("curr.module")}</h4>
                         <div className="w-full bg-brand-dark/10 rounded-full h-2 mb-2">
                             <div className="bg-brand-green h-2 rounded-full w-[45%]"></div>
                         </div>
-                        <p className="text-xs text-brand-dark/60 font-medium text-right">Progress: 45%</p>
+                        <p className="text-xs text-brand-dark/60 font-medium text-right">{t("curr.progress")}</p>
                     </div>
 
                     <ShimmerCard className="glass-card rounded-3xl p-4 border border-white/20 shadow-premium absolute bottom-[-10%] left-[-10%] w-2/3 backdrop-blur-xl animate-float-delayed">
@@ -84,8 +86,8 @@ export function CurriculumScroll() {
                                 <FileText size={24} />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-brand-dark">Izpildīts Uzdevums!</p>
-                                <p className="text-xs text-brand-green font-bold">+50 XP iegūti</p>
+                                <p className="text-sm font-bold text-brand-dark">{t("curr.task.done")}</p>
+                                <p className="text-xs text-brand-green font-bold">{t("curr.task.xp")}</p>
                             </div>
                         </div>
                     </ShimmerCard>

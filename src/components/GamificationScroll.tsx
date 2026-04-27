@@ -2,8 +2,10 @@
 
 import { Trophy, Gift, Vote, ArrowRight, CheckCircle } from "lucide-react";
 import { ScrollReveal, SpringCounter, DotGrid } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function GamificationScroll() {
+    const t = useT();
     return (
         <section className="py-24 px-6 md:px-0 max-w-6xl mx-auto relative z-10">
             <DotGrid dotColor="rgba(24, 139, 246, 0.08)" gap={24} />
@@ -12,13 +14,13 @@ export function GamificationScroll() {
                 {/* Text Content - Left Side */}
                 <ScrollReveal variant="slideLeft" className="w-full md:w-1/2 space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 text-brand-green text-sm font-bold tracking-wide uppercase mb-2">
-                        Spēles teorija un DAO
+                        {t("gam.tag")}
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-brand-dark leading-tight">
-                        Mācies. Krāj XP. <span className="text-gradient-premium">Ietekmē.</span>
+                        {t("gam.title.a")} <span className="text-gradient-premium">{t("gam.title.b")}</span>
                     </h2>
                     <p className="text-xl text-brand-dark/70 font-medium leading-relaxed">
-                        Tava iesaiste tiek atalgota. Piedalies diskusijās, apgūsti materiālus un kāp līmeņos, lai atbloķētu privilēģijas un piedalītos DAO lēmumos.
+                        {t("gam.subtitle")}
                     </p>
 
                     <ul className="space-y-5">
@@ -27,8 +29,8 @@ export function GamificationScroll() {
                                 <Trophy size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">XP Punktu Sistēma</h4>
-                                <p className="text-brand-dark/60 font-medium">Lasi, komentē un palīdzi citiem. Krājot punktus, atbloķē jaunus kursus un konsultācijas.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("gam.bullet1.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("gam.bullet1.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -36,8 +38,8 @@ export function GamificationScroll() {
                                 <Vote size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">DAO Balsojumi</h4>
-                                <p className="text-brand-dark/60 font-medium">Biedriem (Level 4+) ir balstiesības. Kopīgi lemjam par budžetu un tālākiem tēriņiem platformas attīstībai.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("gam.bullet2.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("gam.bullet2.body")}</p>
                             </div>
                         </li>
                         <li className="flex items-start gap-4">
@@ -45,8 +47,8 @@ export function GamificationScroll() {
                                 <Gift size={20} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-brand-dark">Airdrop Kampaņas</h4>
-                                <p className="text-brand-dark/60 font-medium">Regulāri Web3 uzdevumi, par kuru veikšanu iespējams saņemt atlīdzības un bonusus sadarbības platformās.</p>
+                                <h4 className="text-lg font-bold text-brand-dark">{t("gam.bullet3.title")}</h4>
+                                <p className="text-brand-dark/60 font-medium">{t("gam.bullet3.body")}</p>
                             </div>
                         </li>
                     </ul>
@@ -55,7 +57,7 @@ export function GamificationScroll() {
                         onClick={() => document.getElementById('pievienoties')?.scrollIntoView({ behavior: 'smooth' })}
                         className="group mt-8 bg-brand-dark text-white px-8 py-3.5 rounded-full font-bold text-lg flex items-center gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-brand-dark/20"
                     >
-                        Sāc pelnīt pieredzi
+                        {t("gam.cta")}
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </ScrollReveal>
@@ -72,12 +74,12 @@ export function GamificationScroll() {
                                 <circle className="text-brand-green drop-shadow-md" strokeWidth="8" strokeDasharray="364" strokeDashoffset="120" strokeLinecap="round" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64" />
                             </svg>
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                <span className="text-3xl font-bold text-brand-dark">Lvl <SpringCounter target={4} className="inline" /></span>
+                                <span className="text-3xl font-bold text-brand-dark">{t("gam.lvl")} <SpringCounter target={4} className="inline" /></span>
                             </div>
                         </div>
 
-                        <h3 className="text-2xl font-bold text-brand-dark mb-1">Tu esi Inovators</h3>
-                        <p className="text-sm font-medium text-brand-dark/60 mb-6">Līdz Level 5 atlikuši <SpringCounter target={450} className="inline font-bold text-brand-green" /> XP</p>
+                        <h3 className="text-2xl font-bold text-brand-dark mb-1">{t("gam.role")}</h3>
+                        <p className="text-sm font-medium text-brand-dark/60 mb-6">{t("gam.until.next")} <SpringCounter target={450} className="inline font-bold text-brand-green" /> {t("gam.xp")}</p>
 
                         <div className="w-full flex justify-between items-center bg-brand-dark/5 rounded-2xl p-4">
                             <div className="flex items-center gap-3">
@@ -85,8 +87,8 @@ export function GamificationScroll() {
                                     <Vote size={18} />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-bold text-brand-dark">DAO Tiesības</p>
-                                    <p className="text-xs text-brand-dark/60 font-medium">Atslēgtas</p>
+                                    <p className="text-sm font-bold text-brand-dark">{t("gam.dao.title")}</p>
+                                    <p className="text-xs text-brand-dark/60 font-medium">{t("gam.dao.unlocked")}</p>
                                 </div>
                             </div>
                             <div className="w-8 h-8 flex items-center justify-center text-brand-green">

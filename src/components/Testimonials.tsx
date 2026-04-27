@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 const testimonials = [
     {
@@ -27,6 +28,7 @@ const testimonials = [
 ];
 
 export function Testimonials() {
+    const t = useT();
     const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
     return (
@@ -39,24 +41,24 @@ export function Testimonials() {
                 <ScrollReveal variant="blurFadeIn">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-12 h-[2px] bg-brand-green/40" />
-                        <span className="text-xs font-bold text-brand-green tracking-[0.3em] uppercase">Kopienas balss</span>
+                        <span className="text-xs font-bold text-brand-green tracking-[0.3em] uppercase">{t("test.tag")}</span>
                         <div className="w-12 h-[2px] bg-brand-green/40" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 text-center">
-                        Atsauksmes
+                        {t("test.h3")}
                     </h3>
                     <p className="text-center text-brand-dark/40 text-sm mb-16 max-w-lg mx-auto">
-                        Reālas atsauksmes no mūsu kopienas dalībniekiem
+                        {t("test.subtitle")}
                     </p>
                 </ScrollReveal>
 
                 <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8" staggerDelay={0.12}>
-                    {testimonials.map((t, idx) => {
+                    {testimonials.map((item, idx) => {
                         const isExpanded = expandedIdx === idx;
-                        const isLong = t.quote.length > 200;
+                        const isLong = item.quote.length > 200;
                         const displayQuote = isLong && !isExpanded
-                            ? t.quote.substring(0, 200) + "..."
-                            : t.quote;
+                            ? item.quote.substring(0, 200) + "..."
+                            : item.quote;
 
                         return (
                             <StaggerItem key={idx}>
@@ -83,18 +85,18 @@ export function Testimonials() {
                                         onClick={() => setExpandedIdx(isExpanded ? null : idx)}
                                         className="text-xs font-bold text-brand-green hover:text-brand-green/70 mb-6 transition-colors uppercase tracking-wider"
                                     >
-                                        {isExpanded ? "Rādīt mazāk ↑" : "Lasīt vairāk →"}
+                                        {isExpanded ? t("test.show.less") : t("test.read.more")}
                                     </button>
                                 )}
 
                                 {/* Author */}
                                 <div className="flex items-center gap-3 pt-4 border-t border-brand-dark/5">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-green/20 to-brand-blue/20 flex items-center justify-center text-sm font-bold text-brand-dark/60">
-                                        {t.author.split(" ").map(n => n[0]).join("")}
+                                        {item.author.split(" ").map(n => n[0]).join("")}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-brand-dark">{t.author}</p>
-                                        <p className="text-[11px] text-brand-dark/40">{t.timeAgo}</p>
+                                        <p className="text-sm font-bold text-brand-dark">{item.author}</p>
+                                        <p className="text-[11px] text-brand-dark/40">{item.timeAgo}</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,8 +1,10 @@
 'use client';
 import Script from 'next/script';
 import { ScrollReveal } from "./scroll";
+import { useT } from "@/i18n/LangProvider";
 
 export function CheckoutSection() {
+    const t = useT();
     return (
         <section id="pievienoties" className="py-24 px-6 relative overflow-hidden">
             {/* Background blobs */}
@@ -12,14 +14,14 @@ export function CheckoutSection() {
             <div className="max-w-2xl mx-auto relative z-10">
                 <ScrollReveal variant="blurFadeIn" className="text-center mb-12">
                     <span className="inline-block px-4 py-1.5 bg-brand-green/10 text-brand-green text-xs font-bold uppercase tracking-widest rounded-full mb-4">
-                        Pievienojies tagad
+                        {t("checkout.tag")}
                     </span>
                     <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                        <span className="text-brand-dark">Maksā cik </span>
-                        <span className="text-gradient-premium">vēlies.</span>
+                        <span className="text-brand-dark">{t("checkout.title.a")} </span>
+                        <span className="text-gradient-premium">{t("checkout.title.b")}</span>
                     </h2>
                     <p className="text-brand-dark/60 text-lg max-w-md mx-auto">
-                        Iestājies 100x komūnā par sev piemērotu summu. Piekļūsti visam saturam, AI rīkiem un cilvēkiem.
+                        {t("checkout.subtitle")}
                     </p>
                 </ScrollReveal>
 
