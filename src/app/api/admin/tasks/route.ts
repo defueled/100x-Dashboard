@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { createClient } from '@supabase/supabase-js';
-import { isAdminEmail } from '@/lib/admin';
+import { isAdmin } from '@/lib/admin';
 import { syncUserToGHL } from '@/lib/ghlSync';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ function getSupabase() {
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    if (!isAdminEmail(session?.user?.email)) {
+    if (!(await isAdmin(session?.user?.email))) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     const reviewer = session?.user?.email;
-    if (!isAdminEmail(reviewer)) {
+    if (!(await isAdmin(reviewer))) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

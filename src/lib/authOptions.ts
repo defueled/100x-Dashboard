@@ -257,15 +257,21 @@ export const authOptions: NextAuthOptions = {
                     .eq('email', session.user.email)
                     .single();
 
+                let ghlTags: string[] = [];
                 if (data) {
                     // @ts-ignore
                     session.user.is_subscribed = data.is_subscribed;
+                    ghlTags = data.socials?.ghl_tags || [];
                     // @ts-ignore
-                    session.user.ghl_tags = data.socials?.ghl_tags || [];
+                    session.user.ghl_tags = ghlTags;
                 }
-                // Admin allow-list bypass — resolved server-side from ADMIN_EMAILS env.
+                // Admin = on ADMIN_EMAILS env list OR has the `admin👑` tag in GHL.
+                // GHL tag is the canonical lever the team manages; env is the bootstrap fallback.
+                const hasAdminTag = ghlTags.some(
+                    (t: string) => t.toLowerCase().trim() === 'admin👑'
+                );
                 // @ts-ignore
-                session.user.is_admin = isAdminEmail(session.user.email);
+                session.user.is_admin = isAdminEmail(session.user.email) || hasAdminTag;
             }
             return session;
         },

@@ -97,7 +97,7 @@ export default function AdminTasksPage() {
 
                 {error && (
                     <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-medium text-red-700">
-                        {error} — check ADMIN_EMAILS env var.
+                        {error} — must be on ADMIN_EMAILS env list or have the `admin👑` tag in GHL.
                     </div>
                 )}
 
