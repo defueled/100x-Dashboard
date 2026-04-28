@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useScroll, useSpring, useTransform, motion, type MotionValue } from "framer-motion";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { useT } from "@/i18n/LangProvider";
 
 /* ────────────────────────────────────────────────────────────
@@ -216,7 +217,8 @@ export function HeroCanvas() {
                     style={{ opacity: useTransform(springScroll, [0, 0.06], [0.6, 0]) }}
                     className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
                 >
-                    <div className="w-[1.5px] h-10 bg-gradient-to-t from-brand-green via-brand-green/50 to-transparent" />
+                    <ChevronUp size={16} strokeWidth={2.25} className="text-brand-green -mb-1" />
+                    <div className="w-[1.5px] h-9 bg-gradient-to-b from-brand-green via-brand-green/50 to-transparent" />
                     <span className="text-[9px] uppercase tracking-[0.4em] text-brand-green/70 font-bold mt-2">{t("hero.scroll.up")}</span>
                 </motion.div>
 
@@ -225,7 +227,8 @@ export function HeroCanvas() {
                     className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
                 >
                     <span className="text-[9px] uppercase tracking-[0.4em] text-brand-green/70 font-bold mb-4">{t("hero.scroll.down")}</span>
-                    <div className="w-[1.5px] h-16 bg-gradient-to-b from-brand-green via-brand-green/50 to-transparent" />
+                    <div className="w-[1.5px] h-14 bg-gradient-to-t from-brand-green via-brand-green/50 to-transparent" />
+                    <ChevronDown size={16} strokeWidth={2.25} className="text-brand-green -mt-1" />
                 </motion.div>
 
                 <motion.div
