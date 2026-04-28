@@ -4,6 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { Coins, Gem } from 'lucide-react';
 import { Wallet } from 'lucide-react';
 
+function formatTokenPrice(priceStr: string): string {
+    const n = parseFloat(priceStr);
+    if (!isFinite(n) || n <= 0) return '—';
+    if (n >= 1) return `$${n.toFixed(2)}`;
+    if (n >= 0.01) return `$${n.toFixed(4)}`;
+    if (n >= 0.0001) return `$${n.toFixed(6)}`;
+    return `$${n.toExponential(2)}`;
+}
+
+function formatMarketCap(fdv: number): string {
+    if (!isFinite(fdv) || fdv <= 0) return '—';
+    if (fdv >= 1e9) return `$${(fdv / 1e9).toFixed(2)}B`;
+    if (fdv >= 1e6) return `$${(fdv / 1e6).toFixed(2)}M`;
+    if (fdv >= 1e3) return `$${(fdv / 1e3).toFixed(1)}K`;
+    return `$${fdv.toFixed(0)}`;
+}
+
 interface MintinaStatsProps {
     evmAddress?: string;
     totalXp: number;
@@ -101,13 +118,42 @@ export function MintinaAirdropCard({ totalXp, seasonMultiplier }: { totalXp: num
 }
 
 export function MintinaMarketCard() {
-    const [marketData, setMarketData] = useState<any>(null);
+    const [marketData, setMarketData] = useState<{ priceUsd?: string; priceChangeH24?: number; fdv?: number } | null>(null);
 
     useEffect(() => {
-        fetch('https://api.dexscreener.com/latest/dex/tokens/0xDE65f89596F88F02bE141B663cae662ed32cb08F')
-            .then(r => r.json())
-            .then(d => { if (d.pairs?.[0]) setMarketData(d.pairs[0]); })
-            .catch(() => {});
+        // GeckoTerminal indexes the Mintiņš/WETH pool on Base; DexScreener
+        // doesn't yet (liquidity below their threshold). Try GT first, then
+        // fall back to DexScreener so the card auto-recovers if/when they
+        // index the pair.
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch('https://api.geckoterminal.com/api/v2/networks/base/tokens/0xDE65f89596F88F02bE141B663cae662ed32cb08F/pools');
+                const d = await res.json();
+                const pool = d?.data?.[0]?.attributes;
+                if (pool && !cancelled) {
+                    setMarketData({
+                        priceUsd: pool.base_token_price_usd,
+                        priceChangeH24: parseFloat(pool.price_change_percentage?.h24 ?? '0'),
+                        fdv: parseFloat(pool.fdv_usd ?? '0'),
+                    });
+                    return;
+                }
+            } catch {}
+            try {
+                const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/0xDE65f89596F88F02bE141B663cae662ed32cb08F');
+                const d = await res.json();
+                const pair = d?.pairs?.[0];
+                if (pair && !cancelled) {
+                    setMarketData({
+                        priceUsd: pair.priceUsd,
+                        priceChangeH24: parseFloat(pair.priceChange?.h24 ?? '0'),
+                        fdv: pair.fdv,
+                    });
+                }
+            } catch {}
+        })();
+        return () => { cancelled = true; };
     }, []);
 
     return (
@@ -123,23 +169,23 @@ export function MintinaMarketCard() {
                     </div>
                     <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
                         marketData
-                            ? ((marketData.priceChange?.h24 || 0) >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400')
+                            ? ((marketData.priceChangeH24 ?? 0) >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400')
                             : 'bg-white/10 text-white/50'
                     }`}>
-                        {marketData ? `${marketData.priceChange?.h24 || '0'}% (24H)` : 'Live Dex'}
+                        {marketData ? `${(marketData.priceChangeH24 ?? 0).toFixed(1)}% (24H)` : 'Live Dex'}
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mb-6">
                     <div>
                         <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Cena</p>
                         <p className="text-2xl font-black italic tracking-tighter">
-                            {marketData?.priceUsd ? `$${parseFloat(marketData.priceUsd).toFixed(6)}` : '—'}
+                            {marketData?.priceUsd ? formatTokenPrice(marketData.priceUsd) : '—'}
                         </p>
                     </div>
                     <div>
                         <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Market Cap</p>
                         <p className="text-2xl font-black italic tracking-tighter">
-                            {marketData?.fdv ? `$${(marketData.fdv / 1000).toFixed(1)}K` : '—'}
+                            {marketData?.fdv ? formatMarketCap(marketData.fdv) : '—'}
                         </p>
                     </div>
                 </div>

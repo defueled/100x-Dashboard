@@ -46,7 +46,8 @@ import {
     ArrowRight,
     Newspaper,
     Code2,
-    Menu
+    Menu,
+    Vote
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Image from 'next/image';
@@ -64,7 +65,7 @@ import { PillarPraktibaView } from './PillarPraktibaView';
 const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
 
 
-type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard';
+type ViewId = 'dashboard' | 'ai' | 'tredfi' | 'defi' | 'culture' | 'profile' | 'calendar' | 'news' | 'vibe' | 'leaderboard' | 'token' | 'dao';
 type QuestStatus = 'completed' | 'active' | 'locked';
 
 interface Quest {
@@ -112,6 +113,8 @@ const SECTION_NAV: Record<SectionId, { label: string; items: SectionNavItem[] }>
         label: 'DeFi',
         items: [
             { icon: Landmark, label: 'Pratība', view: 'defi' },
+            { icon: Coins, label: 'Mūsu Žetons', view: 'token' },
+            { icon: Vote, label: 'DAO', view: 'dao' },
         ],
     },
     culture: {
@@ -774,6 +777,8 @@ import { TreasureGem } from './gamification/TreasureGem';
 import { ProfileSettings } from './profile/ProfileSettings';
 import { NewsView } from './news/NewsView';
 import { DashboardHome } from './DashboardHome';
+import { TokenView } from './views/TokenView';
+import { DaoView } from './views/DaoView';
 import { VibeView } from './vibe/VibeView';
 import { TokenGate } from './TokenGate';
 
@@ -1147,6 +1152,8 @@ export function DashboardEmbed() {
                 {activeView === 'profile' && <ProfileSettings />}
                 {activeView === 'news' && <NewsView initialCategory="ai" />}
                 {activeView === 'leaderboard' && <LeaderboardView />}
+                {activeView === 'token' && <TokenView />}
+                {activeView === 'dao' && <DaoView />}
                 {activeView === 'vibe' && (
                     <VibeView
                         session={session}
