@@ -71,8 +71,10 @@ export function CalendarView() {
     const [activeTab, setActiveTab] = useState<Tab>('marketplace');
     const [activeCalendars, setActiveCalendars] = useState<string[]>([]);
     const [activationLoading, setActivationLoading] = useState<string | null>(null);
+    const [deactivationLoading, setDeactivationLoading] = useState<string | null>(null);
     const [ghlEvents, setGhlEvents] = useState<any[]>([]);
     const [eventsLoading, setEventsLoading] = useState(false);
+    const [activationsLoaded, setActivationsLoaded] = useState(false);
 
     useEffect(() => {
         setEventsLoading(true);
@@ -83,26 +85,73 @@ export function CalendarView() {
             .finally(() => setEventsLoading(false));
     }, []);
 
+    // Hydrate active overlays from the user's profile so activations survive refresh.
+    useEffect(() => {
+        if (!session?.user?.email) return;
+        fetch('/api/progress')
+            .then(r => r.json())
+            .then(d => {
+                const overlays = Array.isArray(d?.profile?.calendar_overlays)
+                    ? (d.profile.calendar_overlays as string[])
+                    : [];
+                setActiveCalendars(overlays);
+                if (overlays.length > 0) setActiveTab('active');
+            })
+            .catch(() => {})
+            .finally(() => setActivationsLoaded(true));
+    }, [session?.user?.email]);
+
     const handleActivate = async (productId: string, icsUrl?: string) => {
         setActivationLoading(productId);
+        try {
+            const res = await fetch('/api/calendar/activate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data?.error || 'Aktivizācija neizdevās. Mēģini vēlreiz.');
+                return;
+            }
+            if (Array.isArray(data?.calendarOverlays)) {
+                setActiveCalendars(data.calendarOverlays);
+            }
+            setActiveTab('active');
 
-        // Mocking the GHL Webhook call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        setActiveCalendars(prev => [...prev, productId]);
-        setActivationLoading(null);
-        setActiveTab('active');
-
-        // Quick-Add to Google Calendar Strategy:
-        if (icsUrl) {
-            // Encode the ICS URL for the Google Calendar 1-click subscribe link
-            const googleCalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
-            // Open in new tab so they can immediately subscribe
-            window.open(googleCalUrl, '_blank');
+            if (icsUrl) {
+                const googleCalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
+                window.open(googleCalUrl, '_blank');
+            }
+        } catch (err) {
+            console.error('[CalendarView] activate error:', err);
+            alert('Aktivizācija neizdevās. Mēģini vēlreiz.');
+        } finally {
+            setActivationLoading(null);
         }
+    };
 
-        // In reality, here we would post to our backend which hits GHL:
-        // fetch('/api/ghl/add-tag', { method: 'POST', body: JSON.stringify({ email: session?.user?.email, tags: [`[Calendar] ${productId}`] }) })
+    const handleDeactivate = async (productId: string) => {
+        if (!confirm('Vai tiešām vēlies atslēgt šo kalendāra ritmu?')) return;
+        setDeactivationLoading(productId);
+        try {
+            const res = await fetch(`/api/calendar/activate?productId=${encodeURIComponent(productId)}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data?.error || 'Atslēgšana neizdevās.');
+                return;
+            }
+            if (Array.isArray(data?.calendarOverlays)) {
+                setActiveCalendars(data.calendarOverlays);
+            }
+        } catch (err) {
+            console.error('[CalendarView] deactivate error:', err);
+            alert('Atslēgšana neizdevās.');
+        } finally {
+            setDeactivationLoading(null);
+        }
     };
 
     return (
@@ -282,8 +331,12 @@ export function CalendarView() {
                                                     >
                                                         Resync Google
                                                     </button>
-                                                    <button className="flex-1 md:flex-none bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                                                        Pārvaldīt Ritmu <Sparkles size={14} />
+                                                    <button
+                                                        onClick={() => handleDeactivate(product.id)}
+                                                        disabled={deactivationLoading === product.id}
+                                                        className="flex-1 md:flex-none bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                                                    >
+                                                        {deactivationLoading === product.id ? 'Atslēdz…' : 'Atslēgt'}
                                                     </button>
                                                 </div>
                                             </div>
