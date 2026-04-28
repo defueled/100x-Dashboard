@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { HeroCanvas } from "@/components/HeroCanvas";
-// DashboardSection removed — auth handled in header
+import { DashboardSection } from "@/components/DashboardSection";
 import { Description } from "@/components/Description";
 import { CurriculumScroll } from "@/components/CurriculumScroll";
 import { CommunityScroll } from "@/components/CommunityScroll";
@@ -15,7 +15,7 @@ import { Footer } from "@/components/Footer";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { LangToggle } from "@/components/LangToggle";
 import { SocialProofRibbon } from "@/components/SocialProofRibbon";
-// InitialScroll removed — was only needed to skip DashboardSection
+import { InitialScroll } from "@/components/InitialScroll";
 import { DashboardButton } from "@/components/DashboardButton";
 import { SectionDivider } from "@/components/scroll";
 
@@ -28,6 +28,12 @@ export default function Home() {
         <div className="absolute bottom-[10%] right-[-10%] w-[60vw] h-[60vw] bg-brand-blue/10 blur-[150px] rounded-full animate-float-delayed" />
         <div className="fixed inset-0 bg-gradient-to-br from-brand-blue/5 via-transparent to-brand-green/5 animate-pulse-slow -z-10" />
       </div>
+
+      {/* Ghost-app login lives ABOVE the header so scrolling up from the
+          hero reveals the looking-glass dashboard preview. InitialScroll
+          auto-skips past it on first load, leaving it as a hidden treat. */}
+      <InitialScroll />
+      <DashboardSection />
 
       <header id="main-nav" className="sticky top-0 z-50 flex justify-between items-center w-full px-4 md:px-6 py-4 bg-[var(--color-background)]/80 backdrop-blur-md border-b border-black/5">
         <div className="flex items-center gap-4 md:gap-6">
