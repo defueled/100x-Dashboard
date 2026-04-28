@@ -18,9 +18,12 @@ export async function GET(): Promise<NextResponse> {
     }
 
     const supabase = getSupabase();
+    // Gate the leaderboard on real subscribers — non-paying Gmail sign-ups
+    // get a profile row but should not appear until `abonements💰` is set.
     const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .eq('is_subscribed', true)
         .order('total_xp', { ascending: false })
         .limit(20);
 
