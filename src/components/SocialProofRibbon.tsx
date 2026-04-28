@@ -14,16 +14,16 @@ export function SocialProofRibbon() {
                 <div className="flex items-center gap-4">
                     <div className="flex -space-x-3">
                         <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-blue/20 flex items-center justify-center overflow-hidden">
-                            <img src="https://i.pravatar.cc/100?img=1" alt="Member" className="w-full h-full object-cover" />
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Member" className="w-full h-full object-cover" />
                         </div>
                         <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-green/20 flex items-center justify-center overflow-hidden">
-                            <img src="https://i.pravatar.cc/100?img=5" alt="Member" className="w-full h-full object-cover" />
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Member" className="w-full h-full object-cover" />
                         </div>
                         <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-orange/20 flex items-center justify-center overflow-hidden">
-                            <img src="https://i.pravatar.cc/100?img=8" alt="Member" className="w-full h-full object-cover" />
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Member" className="w-full h-full object-cover" />
                         </div>
                         <div className="w-10 h-10 rounded-full border-2 border-white bg-brand-dark/10 flex items-center justify-center text-xs font-bold text-brand-dark">
-                            +500
+                            250+
                         </div>
                     </div>
                     <div>
