@@ -138,7 +138,7 @@ export function HeroCanvas() {
     // slides to true center by phase 2 when the brand text has faded out.
     const centerLogoScale = useTransform(springScroll, [0, 0.25], [1, 0.7]);
     const centerLogoOpacity = useTransform(springScroll, [0, 0.15, 0.25], [1, 1, 0.9]);
-    const centerLogoY = useTransform(springScroll, [0, 0.18], [-220, 0]);
+    const centerLogoY = useTransform(springScroll, [0, 0.18], [-280, 0]);
 
     // Indicators
     const indicatorOpacity = useTransform(springScroll, [0, 0.08], [1, 0]);
@@ -162,7 +162,7 @@ export function HeroCanvas() {
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                     style={{ scale: centerLogoScale, opacity: centerLogoOpacity, y: centerLogoY }}
                 >
-                    <img src="/assets/logos/100x-refined-logo.png" alt="100x" className="w-24 md:w-32 h-auto drop-shadow-md" />
+                    <img src="/assets/logos/100x-refined-logo.png" alt="100x" className="w-20 md:w-24 h-auto drop-shadow-md" />
                 </motion.div>
 
                 {/* Brand beat */}
@@ -214,10 +214,10 @@ export function HeroCanvas() {
                 {/* Scroll indicators */}
                 <motion.div
                     style={{ opacity: useTransform(springScroll, [0, 0.06], [0.6, 0]) }}
-                    className="absolute top-12 left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
+                    className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
                 >
-                    <div className="w-[1.5px] h-16 bg-gradient-to-t from-brand-green via-brand-green/50 to-transparent" />
-                    <span className="text-[9px] uppercase tracking-[0.4em] text-brand-green/70 font-bold mt-4">{t("hero.scroll.up")}</span>
+                    <div className="w-[1.5px] h-10 bg-gradient-to-t from-brand-green via-brand-green/50 to-transparent" />
+                    <span className="text-[9px] uppercase tracking-[0.4em] text-brand-green/70 font-bold mt-2">{t("hero.scroll.up")}</span>
                 </motion.div>
 
                 <motion.div
