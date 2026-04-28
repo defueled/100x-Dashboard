@@ -71,16 +71,18 @@ function LookingGlassSection({ sectionRef, children }: { sectionRef: React.RefOb
             onMouseEnter={() => holeSize.set(180)}
             onMouseLeave={() => holeSize.set(0)}
         >
-            {/* Blurred dashboard preview underneath */}
-            <div className="absolute inset-0 p-4 md:p-8 pointer-events-none select-none opacity-40 grayscale-[0.3]">
+            {/* Blurred dashboard preview underneath — bumped opacity so it
+                peeks through the glass mask even before the user hovers. */}
+            <div className="absolute inset-0 p-4 md:p-8 pointer-events-none select-none opacity-70 grayscale-[0.15]">
                 <div className="w-full h-full border-2 border-brand-green/20 rounded-[2.5rem] overflow-hidden shadow-2xl">
                     <DashboardPreview />
                 </div>
             </div>
 
-            {/* Glassmorphism mask */}
+            {/* Glassmorphism mask — translucent enough that the dashboard
+                shape is visible at rest, fully transparent under the hole. */}
             <motion.div
-                className="absolute inset-0 bg-white/70 backdrop-blur-xl z-10 pointer-events-none"
+                className="absolute inset-0 bg-white/45 backdrop-blur-md z-10 pointer-events-none"
                 style={{ WebkitMaskImage: maskImage, maskImage }}
             />
 
