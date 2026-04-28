@@ -138,7 +138,7 @@ export function HeroCanvas() {
     // slides to true center by phase 2 when the brand text has faded out.
     const centerLogoScale = useTransform(springScroll, [0, 0.25], [1, 0.7]);
     const centerLogoOpacity = useTransform(springScroll, [0, 0.15, 0.25], [1, 1, 0.9]);
-    const centerLogoY = useTransform(springScroll, [0, 0.18], [-280, 0]);
+    const centerLogoY = useTransform(springScroll, [0, 0.18], [-250, 0]);
 
     // Indicators
     const indicatorOpacity = useTransform(springScroll, [0, 0.08], [1, 0]);

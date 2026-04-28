@@ -18,8 +18,8 @@ export const dictionary = {
         "hero.subtitle": "AI, Web3 un FinTech — vienuviet. Strukturētas mācības, slēgta komūna un gamifikācija.",
         "hero.cta.primary": "Pievienoties komūnai",
         "hero.cta.telegram": "Telegram Kopiena",
-        "hero.scroll.up": "UZ AUGŠU",
-        "hero.scroll.down": "UZ LEJU",
+        "hero.scroll.up": "PLATFORMA",
+        "hero.scroll.down": "PAR MUMS",
 
         "social.community": "Pievienojies viedajai komūnai",
         "social.community.sub": "Uzņēmēji, investori un tech entuziasti",
@@ -145,8 +145,8 @@ export const dictionary = {
         "hero.subtitle": "AI, Web3 and FinTech — in one place. Structured lessons, a private community, and gamification.",
         "hero.cta.primary": "Join the community",
         "hero.cta.telegram": "Telegram channel",
-        "hero.scroll.up": "SCROLL UP",
-        "hero.scroll.down": "SCROLL DOWN",
+        "hero.scroll.up": "PLATFORM",
+        "hero.scroll.down": "ABOUT US",
 
         "social.community": "Join the smart community",
         "social.community.sub": "Founders, investors and tech enthusiasts",
