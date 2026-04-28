@@ -124,6 +124,8 @@ export const dictionary = {
         "footer.rights": "© 2026 100x.lv. Visas tiesības aizsargātas.",
         "footer.terms": "Noteikumi",
         "footer.privacy": "Privātums",
+        "footer.lieldraugs": "Lieldraugs",
+        "footer.lieldraugs.aria": "ClickScale — 100x.lv lieldraugs",
 
         "lang.toggle": "EN",
         "lang.toggle.aria": "Switch to English",
@@ -249,6 +251,8 @@ export const dictionary = {
         "footer.rights": "© 2026 100x.lv. All rights reserved.",
         "footer.terms": "Terms",
         "footer.privacy": "Privacy",
+        "footer.lieldraugs": "Major Partner",
+        "footer.lieldraugs.aria": "ClickScale — major partner of 100x.lv",
 
         "lang.toggle": "LV",
         "lang.toggle.aria": "Pārslēgt uz latviešu",

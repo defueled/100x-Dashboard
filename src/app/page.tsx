@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Header } from "@/components/Header";
 import { HeroCanvas } from "@/components/HeroCanvas";
 // DashboardSection removed — auth handled in header
 import { Description } from "@/components/Description";

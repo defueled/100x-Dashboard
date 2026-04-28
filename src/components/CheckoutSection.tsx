@@ -26,24 +26,26 @@ export function CheckoutSection() {
                 </ScrollReveal>
 
                 <ScrollReveal variant="scaleUp" delay={0.15}>
-                <div className="glass-card rounded-[2rem] overflow-hidden shadow-premium">
-                    <iframe
-                        src="https://updates.maverick.lv/widget/form/o29v27nzeMeAkOqO8Pwj"
-                        style={{ width: '100%', height: '1054px', border: 'none' }}
-                        id="inline-o29v27nzeMeAkOqO8Pwj"
-                        data-layout="{'id':'INLINE'}"
-                        data-trigger-type="alwaysShow"
-                        data-trigger-value=""
-                        data-activation-type="alwaysActivated"
-                        data-activation-value=""
-                        data-deactivation-type="neverDeactivate"
-                        data-deactivation-value=""
-                        data-form-name="Jaunais pietiekums -  pay as you want! "
-                        data-height="1054"
-                        data-layout-iframe-id="inline-o29v27nzeMeAkOqO8Pwj"
-                        data-form-id="o29v27nzeMeAkOqO8Pwj"
-                        title="Jaunais pietiekums — maksā cik vēlies"
-                    />
+                <div className="glass-card rounded-[2rem] shadow-premium p-2 md:p-3 bg-white/70">
+                    <div className="rounded-[1.5rem] overflow-hidden bg-white">
+                        <iframe
+                            src="https://updates.maverick.lv/widget/form/o29v27nzeMeAkOqO8Pwj"
+                            style={{ width: '100%', height: '1054px', border: 'none', display: 'block' }}
+                            id="inline-o29v27nzeMeAkOqO8Pwj"
+                            data-layout="{'id':'INLINE'}"
+                            data-trigger-type="alwaysShow"
+                            data-trigger-value=""
+                            data-activation-type="alwaysActivated"
+                            data-activation-value=""
+                            data-deactivation-type="neverDeactivate"
+                            data-deactivation-value=""
+                            data-form-name="Jaunais pietiekums -  pay as you want! "
+                            data-height="1054"
+                            data-layout-iframe-id="inline-o29v27nzeMeAkOqO8Pwj"
+                            data-form-id="o29v27nzeMeAkOqO8Pwj"
+                            title="Jaunais pietiekums — maksā cik vēlies"
+                        />
+                    </div>
                 </div>
                 </ScrollReveal>
             </div>

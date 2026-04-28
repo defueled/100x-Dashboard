@@ -16,12 +16,34 @@ export function Footer() {
                     <Image
                         src="/assets/logos/100x-refined-logo.png"
                         alt="100x.lv"
-                        width={100}
+                        width={40}
                         height={40}
-                        className="h-8 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                        className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
                     />
                     <p className="text-xs text-brand-dark/50 mt-2 font-medium tracking-wide">{t("footer.tagline")}</p>
                 </div>
+
+                {/* Lieldraugs — ClickScale partnership */}
+                <div className="flex flex-col items-center md:items-start gap-2">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-brand-dark/40 font-bold">{t("footer.lieldraugs")}</p>
+                    <a
+                        href="https://clickscale.agency"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={t("footer.lieldraugs.aria")}
+                        className="group flex items-center gap-2.5 rounded-full bg-white/60 hover:bg-white px-3 py-1.5 border border-brand-dark/10 hover:border-brand-blue/30 shadow-sm hover:shadow transition-all"
+                    >
+                        <Image
+                            src="/assets/logos/clickscale.png"
+                            alt="ClickScale"
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 rounded-full object-contain"
+                        />
+                        <span className="text-sm font-bold text-brand-dark/80 group-hover:text-brand-blue transition-colors">ClickScale</span>
+                    </a>
+                </div>
+
                 <div className="flex items-center gap-4">
                     <p className="text-xs text-brand-dark/50 font-medium">{t("footer.join")}</p>
                     <a
