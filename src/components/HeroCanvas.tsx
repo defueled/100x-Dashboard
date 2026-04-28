@@ -134,9 +134,11 @@ export function HeroCanvas() {
     const wireRingOpacity = useTransform(springScroll, [0, 0.15, 0.3], [0.6, 0.3, 0.08]);
     const wireRingScale = useTransform(springScroll, [0, 0.3], [1, 0.55]);
 
-    // Center logo — full color always, shrinks as orbits appear
+    // Center logo — phase 1 sits above the heading so it's not buried,
+    // slides to true center by phase 2 when the brand text has faded out.
     const centerLogoScale = useTransform(springScroll, [0, 0.25], [1, 0.7]);
     const centerLogoOpacity = useTransform(springScroll, [0, 0.15, 0.25], [1, 1, 0.9]);
+    const centerLogoY = useTransform(springScroll, [0, 0.18], [-220, 0]);
 
     // Indicators
     const indicatorOpacity = useTransform(springScroll, [0, 0.08], [1, 0]);
@@ -154,12 +156,13 @@ export function HeroCanvas() {
                     <WireRings />
                 </motion.div>
 
-                {/* 100x logo — FULL COLOR */}
+                {/* 100x logo — FULL COLOR. Sits above the heading on load,
+                    slides to center as the brand text fades out (phase 2). */}
                 <motion.div
                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                    style={{ scale: centerLogoScale, opacity: centerLogoOpacity }}
+                    style={{ scale: centerLogoScale, opacity: centerLogoOpacity, y: centerLogoY }}
                 >
-                    <img src="/assets/logos/100x-refined-logo.png" alt="100x" className="w-20 md:w-28 h-auto" />
+                    <img src="/assets/logos/100x-refined-logo.png" alt="100x" className="w-24 md:w-32 h-auto drop-shadow-md" />
                 </motion.div>
 
                 {/* Brand beat */}
