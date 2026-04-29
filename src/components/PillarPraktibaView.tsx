@@ -276,7 +276,12 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
         const c = claimMap.get(t.id);
         return c?.base || c?.bonus;
     }).length;
-    const pendingCount = tasks.filter((t) => subMap.get(t.id)?.status === 'pending').length;
+    // Unclaimed bonuses = tasks where base XP is claimed (user engaged) but
+    // the bigger bonus is still on the table — the actionable "finish me" count.
+    const unclaimedBonusCount = tasks.filter((t) => {
+        const c = claimMap.get(t.id);
+        return !!c?.base && !c?.bonus;
+    }).length;
 
     const ghlObj = GHL_LEVELS.find((l) => l.level === ghlLevel) || GHL_LEVELS[0];
     const gateMet = ghlLevel >= meta.ghlThreshold;
@@ -373,8 +378,8 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Iegūti</p>
                         </div>
                         <div className="p-4 rounded-2xl bg-white dark:bg-[var(--color-dark-surface)] border border-gray-100 dark:border-[var(--color-dark-border)] text-center">
-                            <p className="text-xl font-black text-amber-500">{pendingCount}</p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Gaida</p>
+                            <p className="text-xl font-black text-amber-500">{unclaimedBonusCount}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Nesaņemts Bonuss</p>
                         </div>
                         <div className="p-4 rounded-2xl bg-white dark:bg-[var(--color-dark-surface)] border border-gray-100 dark:border-[var(--color-dark-border)] text-center">
                             <p className="text-xl font-black" style={{ color: meta.accent }}>Lvl {ghlLevel}</p>
