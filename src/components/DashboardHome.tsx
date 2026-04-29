@@ -8,56 +8,115 @@ import {
     Flame,
     CheckCircle2,
     Sparkles,
-    Newspaper,
-    ExternalLink,
+    GraduationCap,
 } from 'lucide-react';
 import { MintinaBalanceChip, MintinaAirdropCard, MintinaMarketCard } from './mintins/MintinaStats';
 import { motion } from 'framer-motion';
 
-function NewsPreviewCard() {
-    const [news, setNews] = useState<{ title: string; link: string; source: string; pubDate: string }[]>([]);
+const PRATIBA_PILLARS = [
+    { key: 'ai',      label: 'AI Pratība',       emoji: '🤖', accent: '#59b687' },
+    { key: 'tradfi',  label: 'TradFi Pratība',   emoji: '📈', accent: '#4A9EE5' },
+    { key: 'defi',    label: 'DeFi Pratība',     emoji: '⛓️', accent: '#188bf6' },
+    { key: 'culture', label: 'Kultūras Pratība', emoji: '🎨', accent: '#F5A623' },
+] as const;
+
+interface PratibaTask { id: string; pillar: string; bonus_xp?: number; xp_amount?: number }
+interface PratibaClaim { task_id: string; claim_type: 'base' | 'bonus' }
+
+function PratibaProgressPanel() {
+    const [tasks, setTasks] = useState<PratibaTask[]>([]);
+    const [claims, setClaims] = useState<PratibaClaim[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/news?category=ai')
+        fetch('/api/tasks')
             .then(r => r.json())
-            .then(data => Array.isArray(data) && setNews(data.slice(0, 3)))
+            .then((d: { tasks?: PratibaTask[]; claims?: PratibaClaim[] }) => {
+                setTasks(d.tasks || []);
+                setClaims(d.claims || []);
+            })
             .catch(() => {})
             .finally(() => setLoading(false));
     }, []);
+
+    // Build per-task claim map: { base?: true, bonus?: true }
+    const claimMap = new Map<string, { base?: boolean; bonus?: boolean }>();
+    for (const c of claims) {
+        const e = claimMap.get(c.task_id) || {};
+        if (c.claim_type === 'base') e.base = true;
+        else if (c.claim_type === 'bonus') e.bonus = true;
+        claimMap.set(c.task_id, e);
+    }
+
+    const pillarStats = PRATIBA_PILLARS.map(p => {
+        const list = tasks.filter(t => t.pillar === p.key);
+        const total = list.length;
+        const done = list.filter(t => {
+            const c = claimMap.get(t.id);
+            return !!c?.base || !!c?.bonus;
+        }).length;
+        const unclaimedBonus = list.filter(t => {
+            const c = claimMap.get(t.id);
+            return !!c?.base && !c?.bonus;
+        }).length;
+        const newCount = list.filter(t => !claimMap.get(t.id)).length;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        return { ...p, total, done, unclaimedBonus, newCount, pct };
+    });
 
     return (
         <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm md:col-span-2">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
-                        <Newspaper size={18} className="text-orange-500" />
+                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center">
+                        <GraduationCap size={18} className="text-emerald-600" />
                     </div>
-                    <h3 className="text-lg font-black text-gray-900">100x Ekosistēma</h3>
+                    <h3 className="text-lg font-black text-gray-900">Pratība Progress</h3>
                 </div>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Base · Web3 · Live</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">4 Stabi</span>
             </div>
-            <div className="space-y-3">
-                {loading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-10 bg-gray-50 rounded-2xl animate-pulse" />
-                    ))
-                ) : news.map((item, i) => (
-                    <a
-                        key={i}
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-start justify-between gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-orange-50 transition-colors group"
-                    >
-                        <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-900 group-hover:text-orange-600 line-clamp-2 leading-snug transition-colors">{item.title}</p>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{item.source} · {new Date(item.pubDate).toLocaleDateString('lv-LV')}</p>
+
+            {loading ? (
+                <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-14 bg-gray-50 rounded-2xl animate-pulse" />
+                    ))}
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {pillarStats.map(p => (
+                        <div key={p.key} className="p-4 bg-gray-50 rounded-2xl">
+                            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-base shrink-0">{p.emoji}</span>
+                                    <span className="text-xs font-black text-gray-900 truncate">{p.label}</span>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-[10px] font-bold text-gray-500">
+                                        <strong className="text-gray-900">{p.done}</strong>/{p.total} <span className="text-gray-400 uppercase tracking-widest">pabeigts</span>
+                                    </span>
+                                    {p.unclaimedBonus > 0 && (
+                                        <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                                            {p.unclaimedBonus} bonuss
+                                        </span>
+                                    )}
+                                    {p.newCount > 0 && (
+                                        <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                            {p.newCount} jauns
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="h-1.5 bg-white rounded-full overflow-hidden">
+                                <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{ width: `${p.pct}%`, backgroundColor: p.accent }}
+                                />
+                            </div>
                         </div>
-                        <ExternalLink size={12} className="text-gray-300 group-hover:text-orange-400 shrink-0 mt-1 transition-colors" />
-                    </a>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -291,30 +350,6 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                     {/* MINTINA AIRDROP */}
                     <MintinaAirdropCard totalXp={totalXp} seasonMultiplier={seasonMultiplier} />
 
-                    {/* TELEGRAM CARD */}
-                    <a
-                        href="https://t.me/+AzkOgTHpNENmYjU0"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-gradient-to-br from-[#229ED9] to-[#1a7ab0] rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-200 flex flex-col justify-between group hover:-translate-y-1 transition-transform duration-300"
-                    >
-                        <div>
-                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-black text-white mb-1 leading-tight">Kopiena Telegram</h3>
-                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Diskusijas · Jaunumi · Support</p>
-                        </div>
-                        <div className="mt-6 w-full py-3 bg-white text-[#229ED9] rounded-2xl font-black text-sm text-center shadow-lg group-hover:bg-blue-50 transition-colors">
-                            Pievienojies →
-                        </div>
-                    </a>
-
-                    {/* MINTINA MARKET */}
-                    <MintinaMarketCard />
-
                     {/* QUICK TASKS */}
                     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm md:col-span-2">
                         <div className="flex items-center justify-between mb-6">
@@ -366,8 +401,32 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                         </div>
                     </div>
 
-                    {/* NEWS PREVIEW */}
-                    <NewsPreviewCard />
+                    {/* PRATĪBA PROGRESS PANEL — per-pillar what to do / done / new */}
+                    <PratibaProgressPanel />
+
+                    {/* TELEGRAM CARD — pushed to bottom of grid */}
+                    <a
+                        href="https://t.me/+AzkOgTHpNENmYjU0"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-gradient-to-br from-[#229ED9] to-[#1a7ab0] rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-200 flex flex-col justify-between group hover:-translate-y-1 transition-transform duration-300"
+                    >
+                        <div>
+                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
+                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-black text-white mb-1 leading-tight">Kopiena Telegram</h3>
+                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Diskusijas · Jaunumi · Support</p>
+                        </div>
+                        <div className="mt-6 w-full py-3 bg-white text-[#229ED9] rounded-2xl font-black text-sm text-center shadow-lg group-hover:bg-blue-50 transition-colors">
+                            Pievienojies →
+                        </div>
+                    </a>
+
+                    {/* MINTINA MARKET — pushed to bottom of grid */}
+                    <MintinaMarketCard />
 
                 </div>
             </div>
