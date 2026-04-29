@@ -166,7 +166,11 @@ export function MintinaMarketCard() {
             <div className="relative z-10 h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-black text-white text-sm">$M</div>
+                        <img
+                            src="/assets/logos/mintins-token.png"
+                            alt="Mintiņš"
+                            className="w-10 h-10 rounded-full object-cover"
+                        />
                         <div>
                             <h3 className="font-black italic tracking-tight text-emerald-900">MINTIŅŠ STATUS</h3>
                             <p className="text-[10px] text-emerald-600/70 tracking-widest uppercase font-bold">100x Token · Base</p>

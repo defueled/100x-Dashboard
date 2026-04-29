@@ -12,7 +12,11 @@ export function TokenView() {
         <div className="flex flex-col h-full bg-[#F8FAF9]/50 dark:bg-[var(--color-dark-bg)]">
             <header className="h-16 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-[var(--color-dark-surface)] flex items-center justify-between px-8 shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-emerald-500/10"><Coins size={18} className="text-emerald-600" /></div>
+                    <img
+                        src="/assets/logos/mintins-token.png"
+                        alt="Mintiņš"
+                        className="w-9 h-9 rounded-full object-cover"
+                    />
                     <h1 className="text-lg font-bold dark:text-gray-100">Mūsu Žetons — Mintiņš</h1>
                 </div>
             </header>
