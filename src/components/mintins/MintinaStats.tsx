@@ -194,14 +194,15 @@ export function MintinaMarketCard() {
                         </p>
                     </div>
                 </div>
-                <a
-                    href="https://dexscreener.com/base/0xDE65f89596F88F02bE141B663cae662ed32cb08F"
-                    target="_blank"
-                    rel="noreferrer"
+                <button
+                    type="button"
+                    onClick={() => {
+                        document.getElementById('cenas-grafiks')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
                     className="self-start inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold rounded-full transition-colors"
                 >
-                    DexScreener ↗
-                </a>
+                    Uzzini vairāk →
+                </button>
             </div>
             <div className="absolute inset-0 opacity-10 pointer-events-none flex items-end text-emerald-700">
                 <svg className="w-full h-1/2" viewBox="0 0 400 100" preserveAspectRatio="none">

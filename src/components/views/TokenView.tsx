@@ -26,7 +26,7 @@ export function TokenView() {
                     </div>
 
                     {/* GeckoTerminal embedded chart */}
-                    <div className="bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
+                    <div id="cenas-grafiks" className="scroll-mt-6 bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                             <h2 className="font-bold text-gray-900 dark:text-gray-100">Cenas grafiks</h2>
                             <a
