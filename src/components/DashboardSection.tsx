@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { motion, useTransform, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
+import { useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Lock, Zap, Trophy, Flame, LayoutDashboard } from "lucide-react";
@@ -115,12 +115,6 @@ export function DashboardSection() {
     const sectionRef = useRef<HTMLElement>(null);
     const router = useRouter();
     const { data: session, status } = useSession();
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start start", "end start"],
-    });
-    const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
-    const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
     // Show login button immediately — no 3s wait
     if (status === "loading" || !session) {
@@ -148,28 +142,22 @@ export function DashboardSection() {
 
     // Logged in — show dashboard CTA
     return (
-        <motion.section
-            ref={sectionRef}
-            style={{ scale, opacity }}
-            className="h-screen w-full relative bg-[#f8fafc] z-50"
-        >
-            <LookingGlassSection sectionRef={sectionRef}>
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl rounded-3xl flex items-center justify-center mb-6">
-                    <LayoutDashboard className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    Tavs Dashboard
-                </h2>
-                <p className="text-gray-500 font-medium mb-8">
-                    Visi tavi XP, Mintiņš un komūnas dati — vienā vietā.
-                </p>
-                <button
-                    onClick={() => router.push("/app")}
-                    className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black rounded-full hover:scale-105 transition-transform shadow-lg shadow-emerald-200 text-lg"
-                >
-                    Atvērt Dashboard →
-                </button>
-            </LookingGlassSection>
-        </motion.section>
+        <LookingGlassSection sectionRef={sectionRef}>
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl rounded-3xl flex items-center justify-center mb-6">
+                <LayoutDashboard className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Tavs Dashboard
+            </h2>
+            <p className="text-gray-500 font-medium mb-8">
+                Visi tavi XP, Mintiņš un komūnas dati — vienā vietā.
+            </p>
+            <button
+                onClick={() => router.push("/app")}
+                className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black rounded-full hover:scale-105 transition-transform shadow-lg shadow-emerald-200 text-lg"
+            >
+                Atvērt Dashboard →
+            </button>
+        </LookingGlassSection>
     );
 }
