@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/authOptions';
 
 export const dynamic = 'force-dynamic';
 
-const VIBE_BUILD_XP = 250;
+const VIBE_BUILD_XP = 3000;
 
 export async function POST(req: Request) {
     try {

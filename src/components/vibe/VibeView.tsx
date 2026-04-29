@@ -16,7 +16,7 @@ const CURRENT_SPRINT = {
     number: 1,
     theme: 'Uzbūvē 100x Rīku',
     description: 'Izmanto AI, lai uzbūvētu rīku, kas palīdz 100x kopienai. Apraksti ideju, ļauj AI rakstīt kodu, publicē un iesniedz.',
-    xpReward: 250,
+    xpReward: 3000,
     status: 'active' as const,
 };
 
