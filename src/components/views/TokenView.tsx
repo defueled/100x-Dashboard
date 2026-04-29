@@ -47,6 +47,35 @@ export function TokenView() {
                         />
                     </div>
 
+                    {/* Pievienojies! CTA — directly under the chart */}
+                    <section className="bg-indigo-50 dark:bg-indigo-500/5 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-500/20 space-y-3">
+                        <h3 className="font-bold text-lg text-indigo-900 dark:text-indigo-300">🤝 Pievienojies!</h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                            Ja tev jau ir Mintiņi tavā makā, tu vari balsot Snapshot platformā un ietekmēt 100x DAO virzību jau šodien.
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                            Ja vēl neesi iesaistījies — aicinām kļūt par aktīvu biedru, mācīties un kopā veidot nākotni!
+                        </p>
+                        <div className="flex flex-wrap gap-3 pt-2">
+                            <a
+                                href={`https://www.geckoterminal.com/base/pools/${POOL_ADDRESS}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors"
+                            >
+                                Cenas grafiks <ArrowUpRight size={14} />
+                            </a>
+                            <a
+                                href={`https://app.uniswap.org/swap?chain=base&outputCurrency=${TOKEN_ADDRESS}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 font-bold text-xs uppercase tracking-widest rounded-full transition-colors"
+                            >
+                                Iegādāties Uniswap <ArrowUpRight size={14} />
+                            </a>
+                        </div>
+                    </section>
+
                     {/* What is the DAO + Mintiņš's role */}
                     <article className="bg-white dark:bg-[var(--color-dark-surface)] rounded-3xl border border-gray-100 dark:border-gray-800 p-8 shadow-sm space-y-6">
                         <header>
@@ -132,33 +161,6 @@ export function TokenView() {
                             </ul>
                         </section>
 
-                        <section className="space-y-3 bg-indigo-50 dark:bg-indigo-500/5 -mx-2 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/20">
-                            <h3 className="font-bold text-lg text-indigo-900 dark:text-indigo-300">🤝 Pievienojies!</h3>
-                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                Ja tev jau ir Mintiņi tavā makā, tu vari balsot Snapshot platformā un ietekmēt 100x DAO virzību jau šodien.
-                            </p>
-                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                Ja vēl neesi iesaistījies — aicinām kļūt par aktīvu biedru, mācīties un kopā veidot nākotni!
-                            </p>
-                            <div className="flex flex-wrap gap-3 pt-2">
-                                <a
-                                    href={`https://www.geckoterminal.com/base/pools/${POOL_ADDRESS}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-colors"
-                                >
-                                    Cenas grafiks <ArrowUpRight size={14} />
-                                </a>
-                                <a
-                                    href={`https://app.uniswap.org/swap?chain=base&outputCurrency=${TOKEN_ADDRESS}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 font-bold text-xs uppercase tracking-widest rounded-full transition-colors"
-                                >
-                                    Iegādāties Uniswap <ArrowUpRight size={14} />
-                                </a>
-                            </div>
-                        </section>
                     </article>
                 </div>
             </div>

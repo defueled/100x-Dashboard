@@ -10,7 +10,12 @@ function formatTokenPrice(priceStr: string): string {
     if (n >= 1) return `$${n.toFixed(2)}`;
     if (n >= 0.01) return `$${n.toFixed(4)}`;
     if (n >= 0.0001) return `$${n.toFixed(6)}`;
-    return `$${n.toExponential(2)}`;
+    // Sub-cent micro-cap prices: keep 3 significant digits without scientific
+    // notation (e.g. 0.000002422 → "$0.00000242"). Compute decimals needed.
+    const significantDigits = 3;
+    const magnitude = Math.floor(Math.log10(n));
+    const decimals = Math.min(20, significantDigits - magnitude - 1);
+    return `$${n.toFixed(decimals)}`;
 }
 
 function formatMarketCap(fdv: number): string {
@@ -157,34 +162,34 @@ export function MintinaMarketCard() {
     }, []);
 
     return (
-        <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white md:col-span-2 overflow-hidden relative">
+        <div className="bg-emerald-50/60 rounded-[2.5rem] p-8 border border-emerald-100 md:col-span-2 overflow-hidden relative">
             <div className="relative z-10 h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-black text-white text-sm">$M</div>
                         <div>
-                            <h3 className="font-black italic tracking-tight">MINTIŅŠ STATUS</h3>
-                            <p className="text-[10px] text-gray-400 tracking-widest uppercase font-bold">100x Token · Base</p>
+                            <h3 className="font-black italic tracking-tight text-emerald-900">MINTIŅŠ STATUS</h3>
+                            <p className="text-[10px] text-emerald-600/70 tracking-widest uppercase font-bold">100x Token · Base</p>
                         </div>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
                         marketData
-                            ? ((marketData.priceChangeH24 ?? 0) >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400')
-                            : 'bg-white/10 text-white/50'
+                            ? ((marketData.priceChangeH24 ?? 0) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')
+                            : 'bg-emerald-100/60 text-emerald-700/60'
                     }`}>
                         {marketData ? `${(marketData.priceChangeH24 ?? 0).toFixed(1)}% (24H)` : 'Live Dex'}
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mb-6">
                     <div>
-                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Cena</p>
-                        <p className="text-2xl font-black italic tracking-tighter">
+                        <p className="text-[10px] text-emerald-700/60 uppercase font-black tracking-widest mb-1">Cena</p>
+                        <p className="text-2xl font-black italic tracking-tighter text-emerald-900">
                             {marketData?.priceUsd ? formatTokenPrice(marketData.priceUsd) : '—'}
                         </p>
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Market Cap</p>
-                        <p className="text-2xl font-black italic tracking-tighter">
+                        <p className="text-[10px] text-emerald-700/60 uppercase font-black tracking-widest mb-1">Market Cap</p>
+                        <p className="text-2xl font-black italic tracking-tighter text-emerald-900">
                             {marketData?.fdv ? formatMarketCap(marketData.fdv) : '—'}
                         </p>
                     </div>
@@ -193,12 +198,12 @@ export function MintinaMarketCard() {
                     href="https://dexscreener.com/base/0xDE65f89596F88F02bE141B663cae662ed32cb08F"
                     target="_blank"
                     rel="noreferrer"
-                    className="py-3 bg-emerald-500 text-gray-900 rounded-xl text-xs font-black uppercase tracking-widest text-center hover:bg-emerald-400 transition-colors block"
+                    className="self-start inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold rounded-full transition-colors"
                 >
                     DexScreener ↗
                 </a>
             </div>
-            <div className="absolute inset-0 opacity-10 pointer-events-none flex items-end">
+            <div className="absolute inset-0 opacity-10 pointer-events-none flex items-end text-emerald-700">
                 <svg className="w-full h-1/2" viewBox="0 0 400 100" preserveAspectRatio="none">
                     <path d="M0,80 Q50,70 100,20 T200,50 T300,10 T400,60" fill="none" stroke="currentColor" strokeWidth="4" />
                 </svg>
