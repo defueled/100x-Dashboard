@@ -157,9 +157,10 @@ interface DashboardHomeProps {
     profileData?: any;
     seasonMultiplier: number;
     onGmClaim: () => Promise<void>;
+    onOpenToken?: () => void;
 }
 
-export function DashboardHome({ session, dbProgress, profileData, seasonMultiplier, onGmClaim }: DashboardHomeProps) {
+export function DashboardHome({ session, dbProgress, profileData, seasonMultiplier, onGmClaim, onOpenToken }: DashboardHomeProps) {
     const [gmLoading, setGmLoading] = useState(false);
     const [gmData, setGmData] = useState<any>(null);
     const [countdown, setCountdown] = useState('');
@@ -426,7 +427,7 @@ export function DashboardHome({ session, dbProgress, profileData, seasonMultipli
                     </a>
 
                     {/* MINTINA MARKET — pushed to bottom of grid */}
-                    <MintinaMarketCard />
+                    <MintinaMarketCard onSeeMore={onOpenToken} />
 
                 </div>
             </div>

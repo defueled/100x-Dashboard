@@ -122,7 +122,7 @@ export function MintinaAirdropCard({ totalXp, seasonMultiplier }: { totalXp: num
     );
 }
 
-export function MintinaMarketCard() {
+export function MintinaMarketCard({ onSeeMore }: { onSeeMore?: () => void } = {}) {
     const [marketData, setMarketData] = useState<{ priceUsd?: string; priceChangeH24?: number; fdv?: number } | null>(null);
 
     useEffect(() => {
@@ -201,7 +201,12 @@ export function MintinaMarketCard() {
                 <button
                     type="button"
                     onClick={() => {
-                        document.getElementById('cenas-grafiks')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // On TokenView the chart is on the same page → scroll to it.
+                        // On DashboardHome there's no chart → fall through to onSeeMore
+                        // (parent decides what "see more" means, usually a tab switch).
+                        const anchor = document.getElementById('cenas-grafiks');
+                        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        else onSeeMore?.();
                     }}
                     className="self-start inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold rounded-full transition-colors"
                 >

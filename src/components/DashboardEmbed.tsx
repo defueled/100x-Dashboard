@@ -1132,6 +1132,7 @@ export function DashboardEmbed() {
                         profileData={profileData}
                         seasonMultiplier={seasonMultiplier}
                         onGmClaim={fetchProgress}
+                        onOpenToken={() => setActiveView('token')}
                     />
                 )}
                 {activeView === 'ai' && (
