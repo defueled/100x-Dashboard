@@ -9,9 +9,12 @@ import {
 } from 'lucide-react';
 import { GHL_LEVELS } from '@/lib/ghlLevels';
 import { ForumProgressBar } from './DashboardEmbed';
-import { PratibaWizard } from './pratiba/PratibaWizard';
+import { PratibaWizard, getStartTierForDifficulty } from './pratiba/PratibaWizard';
 import { getWizardContent, hasWizardContent } from '@/data/pratibaWizardContent';
 import type { PillarKey } from '@/data/pillarTools';
+
+const PRATIBA_DIFFICULTY_KEY = '100x_pratiba_difficulty';
+type DifficultyKey = 'iesacejs' | 'petnieks' | 'meistars';
 
 type Pillar = 'ai' | 'tredfi' | 'defi' | 'culture';
 type ProofType = 'url' | 'tx_hash' | 'admin_review';
@@ -217,7 +220,19 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
     const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
     const [claimingId, setClaimingId] = useState<string | null>(null);
+    // Default the tier filter from the user's wizard-saved difficulty (Option A).
+    // Iesācējs → T1, Pētnieks → T2, Meistars → T3. User can still click "Visi" to see all.
+    // SSR-safe: read happens in useEffect below, initial state is 'all'.
     const [tierFilter, setTierFilter] = useState<TierFilter>('all');
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const saved = window.localStorage.getItem(PRATIBA_DIFFICULTY_KEY) as DifficultyKey | null;
+            if (saved === 'iesacejs' || saved === 'petnieks' || saved === 'meistars') {
+                setTierFilter(getStartTierForDifficulty(saved) as TierFilter);
+            }
+        } catch {}
+    }, []);
     const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
     const [selected, setSelected] = useState<Task | null>(null);
     const [proof, setProof] = useState('');
