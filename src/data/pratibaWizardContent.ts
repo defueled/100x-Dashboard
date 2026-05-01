@@ -16,17 +16,36 @@ export interface WizardQuestion {
     explanation?: string; // shown on result screen if user got it wrong
 }
 
+export interface WizardPrakse {
+    /** Short title of the practical action (rendered as Step 7 heading). */
+    title: string;
+    /** Why this practice matters — paragraph above the action steps. */
+    intro: string;
+    /** Concrete steps the user takes in the real world. */
+    steps: string[];
+    /** Forum-bound proof: the wizard reads task_catalog.forum_url + forum_template_lv;
+     *  this `forum_hint` is just the in-wizard copy explaining what to post. */
+    forum_hint?: string;
+}
+
 export interface WizardContent {
     tool: string; // matches PILLAR_TOOLS[pillar][n].id
     slides: WizardSlide[];
     quiz: WizardQuestion[];
+    /**
+     * Optional hands-on practice step. Unlocks ONLY when quiz score === total.
+     * When present: bonus_xp is gated behind successful proof submission via
+     * /api/tasks/submit (forum URL or admin review per task_catalog.proof_type).
+     * When absent: bonus_xp auto-awards at 100% quiz score (current behaviour).
+     */
+    prakse?: WizardPrakse;
 }
 
 // Pilot content. Replace `task_id` keys with real task_catalog.id once user picks pilots.
 // `demo-*` keys are usable by the dev preview page only.
 export const PRATIBA_WIZARD_CONTENT: Record<string, WizardContent> = {
     'demo-chatgpt-basics': {
-        tool: 'openai',
+        tool: 'chatbot',
         slides: [
             {
                 title: 'Kas ir ChatGPT?',
@@ -118,6 +137,17 @@ export const PRATIBA_WIZARD_CONTENT: Record<string, WizardContent> = {
                 explanation: 'Ja fakts ir kritisks (likums, summa, datums) — vienmēr pārbaudi ārējā avotā.',
             },
         ],
+        prakse: {
+            title: 'Prakse forumā',
+            intro: 'Tagad tu zini teoriju — laiks pielietot. Pamēģini ChatGPT reālā uzdevumā un padalies ar rezultātu komūnā. Tas atbloķē bonusu un palīdz citiem mācīties no tava piemēra.',
+            steps: [
+                'Izveido ChatGPT promptu kādam savam reālam uzdevumam (e-pasts, plāns, koda fragments)',
+                'Izlabo promptu pēc 1. slaida kārtulām: loma + konteksts + uzdevums + formāts',
+                'Saglabā labākās 2 atbildes vai screenshot',
+                'Publicē forumā: ko centies, kas strādāja, kas nē',
+            ],
+            forum_hint: 'Pierādījumam jābūt forumā — saite uz tavu postu platformā 100x.lv. Bonus XP tiek piešķirts pēc admin pārbaudes (vai automātiski, ja uzdevums atļauj).',
+        },
     },
 };
 

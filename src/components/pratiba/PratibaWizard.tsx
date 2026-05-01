@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight, ArrowLeft, Sparkles, X, CheckCircle2, XCircle,
     BookOpen, Award, RotateCcw, Bot, TrendingUp, Landmark, Palette, Trophy,
+    Lock, MessageSquare, ExternalLink, Copy, Hammer, Clock,
 } from 'lucide-react';
 import {
     PILLAR_TOOLS, PILLAR_LABEL, PILLAR_ACCENT, PILLAR_SUBTITLE,
@@ -13,13 +14,42 @@ import {
 import { type WizardContent } from '@/data/pratibaWizardContent';
 
 type DifficultyKey = 'iesacejs' | 'petnieks' | 'meistars';
-type WizardStep = 'difficulty' | 'pillar' | 'tool' | 'slides' | 'quiz' | 'result';
+type WizardStep = 'difficulty' | 'pillar' | 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
 
-const DIFFICULTIES: Array<{ id: DifficultyKey; label: string; emoji: string; blurb: string; maxTier: 1 | 2 | 3 }> = [
-    { id: 'iesacejs', label: 'Iesācējs', emoji: '🌱', blurb: 'Tikko sāku, gribu pamatus', maxTier: 1 },
-    { id: 'petnieks', label: 'Pētnieks', emoji: '🔍', blurb: 'Pamatos jūtos droši, gribu dziļāk', maxTier: 2 },
-    { id: 'meistars', label: 'Meistars', emoji: '🔥', blurb: 'Aktīvi lietoju, gribu izaicinājumu', maxTier: 3 },
+/**
+ * Option A — difficulty maps to STARTING tier in the wizard. Persisted in
+ * localStorage so users only pick once. When a multi-task wizard pool exists,
+ * `startTier` selects which task is opened first; for now, it's recorded for
+ * future routing in PillarPraktibaView.
+ */
+const DIFFICULTIES: Array<{ id: DifficultyKey; label: string; emoji: string; blurb: string; startTier: 1 | 2 | 3 }> = [
+    { id: 'iesacejs', label: 'Iesācējs', emoji: '🌱', blurb: 'Tikko sāku, gribu pamatus', startTier: 1 },
+    { id: 'petnieks', label: 'Pētnieks', emoji: '🔍', blurb: 'Pamatos jūtos droši, gribu dziļāk', startTier: 2 },
+    { id: 'meistars', label: 'Meistars', emoji: '🔥', blurb: 'Aktīvi lietoju, gribu izaicinājumu', startTier: 3 },
 ];
+
+const DIFFICULTY_STORAGE_KEY = '100x_pratiba_difficulty';
+
+function loadSavedDifficulty(): DifficultyKey | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const v = window.localStorage.getItem(DIFFICULTY_STORAGE_KEY);
+        if (v === 'iesacejs' || v === 'petnieks' || v === 'meistars') return v;
+    } catch {}
+    return null;
+}
+
+function saveDifficulty(d: DifficultyKey) {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(DIFFICULTY_STORAGE_KEY, d);
+    } catch {}
+}
+
+export function getStartTierForDifficulty(d: DifficultyKey | null): 1 | 2 | 3 {
+    if (!d) return 1;
+    return DIFFICULTIES.find((x) => x.id === d)?.startTier ?? 1;
+}
 
 const PILLAR_ICONS: Record<PillarKey, React.ElementType> = {
     ai: Bot,
@@ -34,6 +64,14 @@ interface MinimalTask {
     description_lv?: string | null;
     base_xp?: number | null;
     bonus_xp?: number | null;
+    /** Read from task_catalog when wiring through PillarPraktibaView; powers Prakse proof submission. */
+    proof_type?: 'url' | 'tx_hash' | 'admin_review';
+    proof_hint_lv?: string | null;
+    auto_approve?: boolean;
+    forum_url?: string | null;
+    forum_label?: string | null;
+    forum_template_lv?: string | null;
+    requires_forum_proof?: boolean;
 }
 
 interface Props {
@@ -58,10 +96,23 @@ interface ClaimResponse {
 
 export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose }: Props) {
     // The user picks difficulty/pillar/tool inside the wizard (per spec).
-    // initialPillar lets us pre-select the pillar when launched from a pillar tab —
-    // but the user can still re-pick. They cannot navigate away from the task itself.
+    // Difficulty is persisted in localStorage — once chosen, future wizard runs
+    // skip Step 1 and start at pillar selection. The saved level is shown as
+    // a small badge in the header so the user knows what was carried over.
+    // Initial state must match SSR (no window access), so we hydrate from
+    // localStorage in a useEffect on mount instead of useMemo.
     const [step, setStep] = useState<WizardStep>('difficulty');
     const [difficulty, setDifficulty] = useState<DifficultyKey | null>(null);
+    const [hydrated, setHydrated] = useState(false);
+
+    useEffect(() => {
+        const saved = loadSavedDifficulty();
+        if (saved) {
+            setDifficulty(saved);
+            setStep('pillar');
+        }
+        setHydrated(true);
+    }, []);
     const [pillar, setPillar] = useState<PillarKey | null>(initialPillar ?? null);
     const [tool, setTool] = useState<string | null>(content.tool); // pre-fill tool from content for v1 pilot
     const [slideIdx, setSlideIdx] = useState(0);
@@ -84,8 +135,13 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
     const fraction = total > 0 ? score / total : 0;
     const baseXp = Number(task.base_xp ?? 0);
     const bonusXp = Number(task.bonus_xp ?? 0);
+    const hasPrakse = !!content.prakse;
+    const perfect = score === total && total > 0;
+    const prakseUnlocked = perfect && hasPrakse;
     const projectedBase = Math.round(fraction * baseXp);
-    const projectedBonus = score === total && total > 0 ? bonusXp : 0;
+    // When Prakse is defined, bonus is GATED — it only awards via /api/tasks/submit
+    // after the user posts to the forum. Without Prakse, bonus auto-awards at 100%.
+    const projectedBonus = perfect && !hasPrakse ? bonusXp : 0;
     const projectedTotal = projectedBase + projectedBonus;
 
     const currentSlide = content.slides[slideIdx];
@@ -132,7 +188,7 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
             const res = await fetch('/api/tasks/quiz-claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ task_id: task.id, score, total }),
+                body: JSON.stringify({ task_id: task.id, score, total, has_prakse: hasPrakse }),
             });
             const data: ClaimResponse = await res.json();
             if (!res.ok) {
@@ -148,8 +204,45 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
         }
     };
 
-    const stepIndex = (['difficulty', 'pillar', 'tool', 'slides', 'quiz', 'result'] as const).indexOf(step);
-    const totalSteps = 6;
+    // Prakse proof submission — reuses legacy /api/tasks/submit which handles
+    // forum proof validation, auto_approve, admin_review and the bonus XP claim.
+    const [prakseProof, setPrakseProof] = useState('');
+    const [prakseSubmitting, setPrakseSubmitting] = useState(false);
+    const [prakseError, setPrakseError] = useState<string | null>(null);
+    const [prakseResult, setPrakseResult] = useState<{ success: boolean; status?: string; awardedXp?: number; message?: string } | null>(null);
+
+    const handlePrakseSubmit = async () => {
+        if (!prakseProof.trim()) return;
+        setPrakseSubmitting(true);
+        setPrakseError(null);
+        try {
+            const res = await fetch('/api/tasks/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: task.id, proof: prakseProof.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setPrakseError(data.error || `Kļūda (${res.status})`);
+                return;
+            }
+            setPrakseResult({
+                success: true,
+                status: data.status,           // 'approved' | 'pending'
+                awardedXp: data.awardedXp,     // present when auto-approved
+                message: data.message,
+            });
+            if (data.awardedXp) onClaimed?.(data.awardedXp);
+        } catch (e) {
+            setPrakseError(e instanceof Error ? e.message : 'Tīkla kļūda');
+        } finally {
+            setPrakseSubmitting(false);
+        }
+    };
+
+    const stepOrder = (['difficulty', 'pillar', 'tool', 'slides', 'quiz', 'result', 'prakse'] as const);
+    const stepIndex = stepOrder.indexOf(step);
+    const totalSteps = hasPrakse ? 7 : 6;
     const accent = pillar ? PILLAR_ACCENT[pillar] : '#59b687';
 
     return (
@@ -174,13 +267,30 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 md:px-7 pt-4">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        Pratība · {stepIndex + 1} / {totalSteps}
-                    </span>
+                <div className="flex items-center justify-between px-5 md:px-7 pt-4 gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">
+                            Pratība · {stepIndex + 1} / {totalSteps}
+                        </span>
+                        {difficulty && step !== 'difficulty' && (() => {
+                            const d = DIFFICULTIES.find((x) => x.id === difficulty)!;
+                            return (
+                                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                                    · <span>{d.emoji}</span>
+                                    <span>{d.label}</span>
+                                    <button
+                                        onClick={() => setStep('difficulty')}
+                                        className="ml-1 underline-offset-2 hover:underline text-gray-400 hover:text-gray-600"
+                                    >
+                                        Mainīt
+                                    </button>
+                                </span>
+                            );
+                        })()}
+                    </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[var(--color-dark-bg)] transition-colors"
+                        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[var(--color-dark-bg)] transition-colors shrink-0"
                         aria-label="Aizvērt"
                     >
                         <X size={16} className="text-gray-400" />
@@ -194,7 +304,7 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                             <StepDifficulty
                                 key="difficulty"
                                 value={difficulty}
-                                onPick={(d) => { setDifficulty(d); setStep('pillar'); }}
+                                onPick={(d) => { setDifficulty(d); saveDifficulty(d); setStep('pillar'); }}
                             />
                         )}
 
@@ -256,11 +366,32 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                                 projectedBase={projectedBase}
                                 projectedBonus={projectedBonus}
                                 projectedTotal={projectedTotal}
+                                hasPrakse={hasPrakse}
+                                prakseUnlocked={prakseUnlocked}
                                 claimResult={claimResult}
                                 claiming={claiming}
                                 claimError={claimError}
                                 onRetake={retake}
                                 onClaim={handleClaim}
+                                onGoPrakse={() => setStep('prakse')}
+                                onClose={onClose}
+                            />
+                        )}
+
+                        {step === 'prakse' && content.prakse && (
+                            <StepPrakse
+                                key="prakse"
+                                task={task}
+                                prakse={content.prakse}
+                                bonusXp={bonusXp}
+                                proof={prakseProof}
+                                setProof={setPrakseProof}
+                                submitting={prakseSubmitting}
+                                result={prakseResult}
+                                error={prakseError}
+                                accent={accent}
+                                onSubmit={handlePrakseSubmit}
+                                onBack={() => setStep('result')}
                                 onClose={onClose}
                             />
                         )}
@@ -539,7 +670,8 @@ function StepQuiz({
 
 function StepResult({
     task, content, answers, score, total, projectedBase, projectedBonus, projectedTotal,
-    claimResult, claiming, claimError, onRetake, onClaim, onClose,
+    hasPrakse, prakseUnlocked,
+    claimResult, claiming, claimError, onRetake, onClaim, onGoPrakse, onClose,
 }: {
     task: MinimalTask;
     content: WizardContent;
@@ -549,11 +681,14 @@ function StepResult({
     projectedBase: number;
     projectedBonus: number;
     projectedTotal: number;
+    hasPrakse: boolean;
+    prakseUnlocked: boolean;
     claimResult: ClaimResponse | null;
     claiming: boolean;
     claimError: string | null;
     onRetake: () => void;
     onClaim: () => void;
+    onGoPrakse: () => void;
     onClose: () => void;
 }) {
     const perfect = score === total && total > 0;
@@ -584,13 +719,25 @@ function StepResult({
                     sub={`${total > 0 ? Math.round((score / total) * 100) : 0}% no ${baseXp} bāzes XP`}
                     accent="#10b981"
                 />
-                <Row
-                    label="Bonuss · 100% pareizi"
-                    value={perfect ? `+${claimed ? claimResult!.bonusAward : projectedBonus}` : '—'}
-                    sub={perfect ? `Pilns bonuss (${bonusXp} XP) atbloķēts` : `Vajag visas atbildes pareizas, lai iegūtu +${bonusXp}`}
-                    accent={perfect ? '#f59e0b' : '#9ca3af'}
-                    muted={!perfect}
-                />
+                {hasPrakse ? (
+                    <Row
+                        label="Bonuss · caur Praksi"
+                        value={perfect ? `+${bonusXp} pieejams` : '—'}
+                        sub={perfect
+                            ? `Atbloķēts! Padalies forumā, lai iekasētu +${bonusXp} XP`
+                            : `Vajag visas atbildes pareizas, lai atbloķētu Praksi`}
+                        accent={perfect ? '#f59e0b' : '#9ca3af'}
+                        muted={!perfect}
+                    />
+                ) : (
+                    <Row
+                        label="Bonuss · 100% pareizi"
+                        value={perfect ? `+${claimed ? claimResult!.bonusAward : projectedBonus}` : '—'}
+                        sub={perfect ? `Pilns bonuss (${bonusXp} XP) atbloķēts` : `Vajag visas atbildes pareizas, lai iegūtu +${bonusXp}`}
+                        accent={perfect ? '#f59e0b' : '#9ca3af'}
+                        muted={!perfect}
+                    />
+                )}
                 <Row
                     label="Kopā šajā mēģinājumā"
                     value={`+${claimed ? claimResult!.awardedXp : projectedTotal} XP`}
@@ -599,6 +746,34 @@ function StepResult({
                     bold
                 />
             </div>
+
+            {/* Prakse unlock banner — appears only when quiz is 100% AND task has Prakse */}
+            {prakseUnlocked && (
+                <div className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/10 p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <Hammer size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">
+                                🎁 Prakse atbloķēta
+                            </p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-1">
+                                {content.prakse?.title || 'Prakse'}
+                            </p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                                {content.prakse?.intro}
+                            </p>
+                            <button
+                                onClick={onGoPrakse}
+                                className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition-colors"
+                            >
+                                Sākt Praksi · +{bonusXp} XP <ArrowRight size={12} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Wrong answers review */}
             {!claimed && wrong.length > 0 && (
@@ -671,6 +846,207 @@ function StepResult({
                     Iekasējot, šis uzdevums tiek slēgts. Mēģinājumi pirms iekasēšanas — bez ierobežojuma.
                 </p>
             )}
+        </motion.div>
+    );
+}
+
+function StepPrakse({
+    task, prakse, bonusXp, proof, setProof, submitting, result, error, accent, onSubmit, onBack, onClose,
+}: {
+    task: MinimalTask;
+    prakse: { title: string; intro: string; steps: string[]; forum_hint?: string };
+    bonusXp: number;
+    proof: string;
+    setProof: (s: string) => void;
+    submitting: boolean;
+    result: { success: boolean; status?: string; awardedXp?: number; message?: string } | null;
+    error: string | null;
+    accent: string;
+    onSubmit: () => void;
+    onBack: () => void;
+    onClose: () => void;
+}) {
+    const [copied, setCopied] = useState(false);
+    const copy = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {}
+    };
+
+    const proofLooksValid = (() => {
+        const p = proof.trim();
+        if (!p) return false;
+        if (task.proof_type === 'tx_hash') return /^0x[0-9a-fA-F]{64}$/.test(p);
+        if (/^0x[0-9a-fA-F]{40}$/.test(p)) return true;
+        try {
+            const u = new URL(p);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+            if (task.requires_forum_proof && u.hostname !== 'platforma.100x.lv') return false;
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+
+    const proofWarning = (() => {
+        const p = proof.trim();
+        if (!p || !task.requires_forum_proof || task.proof_type === 'tx_hash') return null;
+        if (/^0x[0-9a-fA-F]{40}$/.test(p)) return null;
+        try {
+            const u = new URL(p);
+            if (u.hostname !== 'platforma.100x.lv') return 'Šim uzdevumam pierādījumam jābūt no platforma.100x.lv';
+        } catch {
+            return 'Pārbaudi URL formātu';
+        }
+        return null;
+    })();
+
+    // Submission state — server returns 'approved' (auto_approve) or 'pending' (admin_review)
+    if (result?.success) {
+        const approved = result.status === 'approved';
+        return (
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="space-y-5 pt-2 text-center">
+                <div className="text-5xl mb-2">{approved ? '🎁' : '⏳'}</div>
+                <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">
+                    {approved ? `+${result.awardedXp ?? bonusXp} bonus XP iekasēts!` : 'Iesniegts admin pārbaudei'}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    {approved
+                        ? 'Paldies par dalīšanos forumā — bonus XP jau ir tavā kontā.'
+                        : 'Tavs foruma posts iesniegts. Bonus XP tiks piešķirts pēc administratora apstiprinājuma.'}
+                </p>
+                <button
+                    onClick={onClose}
+                    className="mt-2 w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm flex items-center justify-center gap-2"
+                >
+                    <CheckCircle2 size={16} /> Aizvērt
+                </button>
+            </motion.div>
+        );
+    }
+
+    return (
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 pt-1">
+            <div className="flex items-center gap-2">
+                <Hammer size={14} style={{ color: accent }} />
+                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: accent }}>
+                    Prakse · +{bonusXp} XP bonuss
+                </span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100 leading-tight">
+                {prakse.title}
+            </h2>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {prakse.intro}
+            </p>
+
+            {/* Action steps */}
+            <ol className="space-y-2 pt-1">
+                {prakse.steps.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                        <span
+                            className="mt-0.5 w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center shrink-0 text-white"
+                            style={{ backgroundColor: accent }}
+                        >
+                            {i + 1}
+                        </span>
+                        <span>{s}</span>
+                    </li>
+                ))}
+            </ol>
+
+            {/* Forum CTA + template (reuses task_catalog.forum_url + forum_template_lv) */}
+            {task.forum_url && (
+                <div className="rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-900/10 p-3.5">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="flex items-center gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
+                            <MessageSquare size={14} /> Padalies forumā
+                        </span>
+                        <a
+                            href={task.forum_url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors"
+                        >
+                            <ExternalLink size={11} /> {task.forum_label || 'Atvērt forumu'}
+                        </a>
+                    </div>
+                    {task.forum_template_lv && (
+                        <div className="relative mt-2">
+                            <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 bg-white dark:bg-[var(--color-dark-bg)] rounded-lg p-3 border border-blue-200 dark:border-blue-800 max-h-40 overflow-y-auto font-mono">
+                                {task.forum_template_lv}
+                            </pre>
+                            <button
+                                onClick={() => copy(task.forum_template_lv!)}
+                                className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-[var(--color-dark-surface)] border border-gray-200 dark:border-[var(--color-dark-border)] text-[10px] font-bold text-gray-600 dark:text-gray-400 hover:text-emerald-600"
+                            >
+                                {copied ? <CheckCircle2 size={10} className="text-emerald-500" /> : <Copy size={10} />}
+                                {copied ? 'Nokopēts' : 'Kopēt'}
+                            </button>
+                        </div>
+                    )}
+                    {prakse.forum_hint && (
+                        <p className="text-[11px] text-blue-800 dark:text-blue-300 mt-2 leading-snug">{prakse.forum_hint}</p>
+                    )}
+                </div>
+            )}
+
+            {/* Proof input */}
+            <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
+                    Saite uz tavu foruma postu
+                </label>
+                <input
+                    type="text"
+                    value={proof}
+                    onChange={(e) => setProof(e.target.value)}
+                    placeholder={task.proof_hint_lv || 'https://platforma.100x.lv/...'}
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-[var(--color-dark-bg)] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 text-sm transition-colors ${
+                        proofWarning
+                            ? 'border-amber-400 focus:ring-amber-200 focus:border-amber-500'
+                            : 'border-gray-200 dark:border-[var(--color-dark-border)] focus:ring-amber-300 focus:border-amber-400'
+                    }`}
+                />
+                {proofWarning && <p className="text-[11px] font-medium text-amber-600 mt-1.5">⚠ {proofWarning}</p>}
+            </div>
+
+            {!task.auto_approve && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                    <Lock size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                        Bonusu pārbauda administrators. Bonus XP tiek piešķirts pēc apstiprinājuma.
+                    </p>
+                </div>
+            )}
+
+            {error && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 text-center">
+                    {error}
+                </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+                <button
+                    onClick={onBack}
+                    disabled={submitting}
+                    className="px-4 py-2.5 rounded-2xl border-2 border-gray-200 dark:border-[var(--color-dark-border)] text-gray-600 dark:text-gray-400 font-bold text-sm hover:border-gray-400 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                    <ArrowLeft size={14} /> Atpakaļ
+                </button>
+                <button
+                    onClick={onSubmit}
+                    disabled={submitting || !proofLooksValid}
+                    className="flex-1 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    {submitting ? (
+                        <Clock size={14} className="animate-spin" />
+                    ) : (
+                        <><Award size={14} /> Iesniegt · +{bonusXp} XP</>
+                    )}
+                </button>
+            </div>
         </motion.div>
     );
 }

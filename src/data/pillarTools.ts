@@ -14,11 +14,16 @@ export interface ToolOption {
 }
 
 export const PILLAR_TOOLS: Record<PillarKey, ToolOption[]> = {
+    // Capability-first: each tool is a SKILL applied across vendors, not a vendor lock.
+    // The wizard teaches the skill; the user picks any provider (ChatGPT/Claude/etc.).
     ai: [
-        { id: 'openai', label: 'ChatGPT (OpenAI)', blurb: 'Universālais AI asistents', emoji: '🟢' },
-        { id: 'anthropic', label: 'Claude (Anthropic)', blurb: 'Garu tekstu un koda meistars', emoji: '🟠' },
-        { id: 'grok', label: 'Grok (xAI)', blurb: 'Reāllaika tīkla AI', emoji: '⚡' },
-        { id: 'gemini', label: 'Gemini (Google)', blurb: 'Multimodāls Google AI', emoji: '✨' },
+        { id: 'chatbot', label: 'Chatboti & promptošana', blurb: 'ChatGPT, Claude, Grok, Gemini — kopīgi pamati', emoji: '🤖' },
+        { id: 'text-to-image', label: 'Text-to-Image', blurb: 'DALL-E, Midjourney, Imagen, FLUX (bezmaksas)', emoji: '🎨' },
+        { id: 'text-to-video', label: 'Text-to-Video', blurb: 'Sora, Veo, Runway, Pika', emoji: '🎬' },
+        { id: 'code-gen', label: 'Koda ģenerēšana', blurb: 'Copilot, Cursor, Claude Code', emoji: '🧑‍💻' },
+        { id: 'agents', label: 'AI Aģenti', blurb: 'Custom GPTs, Claude Skills, Agent SDK', emoji: '🤵' },
+        { id: 'voice', label: 'Balss & Audio', blurb: 'TTS, balss klonēšana, podkāsti', emoji: '🎙️' },
+        { id: 'rag', label: 'Zināšanas & RAG', blurb: 'Augšupielādē failus, AI atbild no tiem', emoji: '🧠' },
     ],
     // TODO: confirm canonical tools with user before authoring real content
     defi: [

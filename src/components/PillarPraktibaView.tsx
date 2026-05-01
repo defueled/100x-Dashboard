@@ -615,6 +615,13 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                             description_lv: selected.description_lv,
                             base_xp: selected.base_xp,
                             bonus_xp: selected.bonus_xp,
+                            proof_type: selected.proof_type,
+                            proof_hint_lv: selected.proof_hint_lv,
+                            auto_approve: selected.auto_approve,
+                            forum_url: selected.forum_url,
+                            forum_label: selected.forum_label,
+                            forum_template_lv: selected.forum_template_lv,
+                            requires_forum_proof: selected.requires_forum_proof,
                         }}
                         content={wizardContent}
                         initialPillar={wizardPillar}

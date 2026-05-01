@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let body: { task_id?: string; score?: number; total?: number };
+    let body: { task_id?: string; score?: number; total?: number; has_prakse?: boolean };
     try {
         body = await req.json();
     } catch {
@@ -29,6 +29,9 @@ export async function POST(req: Request) {
     const taskId = (body.task_id || '').trim();
     const score = Math.max(0, Math.floor(Number(body.score ?? 0)));
     const total = Math.max(0, Math.floor(Number(body.total ?? 0)));
+    // When the wizard task defines a Prakse, bonus_xp is gated behind /api/tasks/submit
+    // (forum proof). Quiz-claim only awards the base portion in that case.
+    const hasPrakse = body.has_prakse === true;
 
     if (!taskId) return NextResponse.json({ error: 'Trūkst task_id' }, { status: 400 });
     if (total <= 0) return NextResponse.json({ error: 'Tests nav korekts' }, { status: 400 });
@@ -37,14 +40,17 @@ export async function POST(req: Request) {
     const email = session.user.email;
     const supabase = getSupabase();
 
-    // Server-recompute XP from authoritative task_catalog — never trust client xp_amount
+    // Server-recompute XP from authoritative task_catalog — never trust client xp_amount.
+    // Existence check filters by claim_type='quiz' so that a later Prakse submission
+    // (which inserts a separate claim_type='bonus' row) is not blocked by this row.
     const [taskRes, existingClaimRes] = await Promise.all([
         supabase.from('task_catalog').select('id, base_xp, bonus_xp, xp_amount, active').eq('id', taskId).maybeSingle(),
         supabase
             .from('xp_claims')
-            .select('task_id, claim_type')
+            .select('task_id')
             .eq('user_email', email)
             .eq('task_id', taskId)
+            .eq('claim_type', 'quiz')
             .maybeSingle(),
     ]);
 
@@ -52,7 +58,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Uzdevums nav atrasts' }, { status: 404 });
     }
     if (existingClaimRes.data) {
-        return NextResponse.json({ error: 'Šim uzdevumam XP jau iekasēts' }, { status: 409 });
+        return NextResponse.json({ error: 'Šim uzdevumam quiz XP jau iekasēts' }, { status: 409 });
     }
 
     const baseXp = Number(taskRes.data.base_xp ?? taskRes.data.xp_amount ?? 0);
@@ -60,7 +66,9 @@ export async function POST(req: Request) {
 
     const fraction = score / total;
     const baseAward = Math.round(fraction * baseXp);
-    const bonusAward = score === total ? bonusXp : 0;
+    // Bonus auto-awards only when there is NO Prakse step. With Prakse, bonus is
+    // claimed separately via /api/tasks/submit after the user posts to the forum.
+    const bonusAward = score === total && !hasPrakse ? bonusXp : 0;
     const awardedXp = baseAward + bonusAward;
 
     if (awardedXp <= 0) {
