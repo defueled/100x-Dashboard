@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 import { GHL_LEVELS } from '@/lib/ghlLevels';
 import { ForumProgressBar } from './DashboardEmbed';
+import { PratibaWizard } from './pratiba/PratibaWizard';
+import { getWizardContent, hasWizardContent } from '@/data/pratibaWizardContent';
+import type { PillarKey } from '@/data/pillarTools';
 
 type Pillar = 'ai' | 'tredfi' | 'defi' | 'culture';
 type ProofType = 'url' | 'tx_hash' | 'admin_review';
@@ -598,8 +601,31 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                 </div>
             </div>
 
-            {/* Submission modal */}
-            {selected && (() => {
+            {/* Wizard-enabled tasks render the new educational wizard;
+                legacy tasks fall back to the proof-submission modal. */}
+            {selected && hasWizardContent(selected.id) && (() => {
+                const wizardContent = getWizardContent(selected.id)!;
+                // Map viewId 'tredfi' → catalog 'tradfi' for the pillar prop
+                const wizardPillar: PillarKey = pillar === 'tredfi' ? 'tradfi' : (pillar as PillarKey);
+                return (
+                    <PratibaWizard
+                        task={{
+                            id: selected.id,
+                            title_lv: selected.title_lv,
+                            description_lv: selected.description_lv,
+                            base_xp: selected.base_xp,
+                            bonus_xp: selected.bonus_xp,
+                        }}
+                        content={wizardContent}
+                        initialPillar={wizardPillar}
+                        onClaimed={() => { void load(); }}
+                        onClose={closeModal}
+                    />
+                );
+            })()}
+
+            {/* Submission modal (legacy non-wizard tasks) */}
+            {selected && !hasWizardContent(selected.id) && (() => {
                 const sc = claimMap.get(selected.id) || {};
                 return (
                     <TaskModal
