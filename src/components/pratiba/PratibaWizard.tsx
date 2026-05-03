@@ -8,12 +8,12 @@ import {
     Lock, MessageSquare, ExternalLink, Copy, Hammer, Clock,
 } from 'lucide-react';
 import {
-    PILLAR_TOOLS, PILLAR_ACCENT,
-    type PillarKey, type ToolOption,
+    PILLAR_ACCENT,
+    type PillarKey,
 } from '@/data/pillarTools';
 import { type WizardContent } from '@/data/pratibaWizardContent';
 
-type WizardStep = 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
+type WizardStep = 'slides' | 'quiz' | 'result' | 'prakse';
 
 interface MinimalTask {
     id: string;
@@ -52,11 +52,10 @@ interface ClaimResponse {
 }
 
 export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose }: Props) {
-    // Wizard always opens from a pillar tab (AI/TradFi/DeFi/Culture sidebar),
-    // so pillar comes pre-set via initialPillar. Step 1 is the tool screen.
-    const [step, setStep] = useState<WizardStep>('tool');
+    // The user clicked a specific task card from a pillar tab — pillar AND
+    // capability/tool are both already implied. Wizard opens straight to slides.
+    const [step, setStep] = useState<WizardStep>('slides');
     const [pillar] = useState<PillarKey | null>(initialPillar ?? 'ai');
-    const [tool, setTool] = useState<string | null>(content.tool); // pre-fill tool from content for v1 pilot
     const [slideIdx, setSlideIdx] = useState(0);
     const [quizIdx, setQuizIdx] = useState(0);
     const [answers, setAnswers] = useState<Array<number | null>>(() =>
@@ -96,7 +95,7 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
     };
     const goPrevSlide = () => {
         if (slideIdx > 0) setSlideIdx((i) => i - 1);
-        else setStep('tool');
+        else onClose();
     };
 
     const pickAnswer = (optIdx: number) => {
@@ -182,9 +181,9 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
         }
     };
 
-    const stepOrder = (['tool', 'slides', 'quiz', 'result', 'prakse'] as const);
+    const stepOrder = (['slides', 'quiz', 'result', 'prakse'] as const);
     const stepIndex = stepOrder.indexOf(step);
-    const totalSteps = hasPrakse ? 5 : 4;
+    const totalSteps = hasPrakse ? 4 : 3;
     const accent = pillar ? PILLAR_ACCENT[pillar] : '#59b687';
 
     return (
@@ -227,17 +226,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                 {/* Step content */}
                 <div className="px-5 md:px-7 pb-6 pt-2 min-h-[420px]">
                     <AnimatePresence mode="wait">
-                        {step === 'tool' && pillar && (
-                            <StepTool
-                                key="tool"
-                                pillar={pillar}
-                                value={tool}
-                                taskTitle={task.title_lv}
-                                onPick={(t) => { setTool(t); setStep('slides'); }}
-                                onBack={onClose}
-                            />
-                        )}
-
                         {step === 'slides' && currentSlide && (
                             <StepSlides
                                 key={`slide-${slideIdx}`}
@@ -313,54 +301,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
 }
 
 /* ============ Step components (inline, OnboardingWizard pattern) ============ */
-
-function StepTool({
-    pillar, value, taskTitle, onPick, onBack,
-}: {
-    pillar: PillarKey;
-    value: string | null;
-    taskTitle: string;
-    onPick: (t: string) => void;
-    onBack: () => void;
-}) {
-    const tools: ToolOption[] = PILLAR_TOOLS[pillar];
-    const accent = PILLAR_ACCENT[pillar];
-    return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pt-2">
-            <div className="text-center space-y-1">
-                <div className="text-4xl mb-2">🛠️</div>
-                <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100">Kuru rīku apgūsim?</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Sāksim ar vienkāršāko līmeni. Pirmais uzdevums: <span className="font-bold text-gray-700 dark:text-gray-200">{taskTitle}</span>
-                </p>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-                {tools.map((t) => {
-                    const active = value === t.id;
-                    return (
-                        <button
-                            key={t.id}
-                            onClick={() => onPick(t.id)}
-                            className="flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all"
-                            style={{
-                                borderColor: active ? accent : 'rgba(0,0,0,0.08)',
-                                backgroundColor: active ? `${accent}10` : undefined,
-                            }}
-                        >
-                            <span className="text-2xl">{t.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-sm font-black text-gray-900 dark:text-gray-100">{t.label}</div>
-                                <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{t.blurb}</div>
-                            </div>
-                            <ArrowRight size={16} className="text-gray-300 shrink-0" />
-                        </button>
-                    );
-                })}
-            </div>
-            <NavBar onBack={onBack} />
-        </motion.div>
-    );
-}
 
 function StepSlides({
     slide, index, total, accent, onNext, onPrev,
