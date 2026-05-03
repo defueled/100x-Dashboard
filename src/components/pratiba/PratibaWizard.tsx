@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight, ArrowLeft, Sparkles, X, CheckCircle2, XCircle,
@@ -13,43 +13,7 @@ import {
 } from '@/data/pillarTools';
 import { type WizardContent } from '@/data/pratibaWizardContent';
 
-type DifficultyKey = 'iesacejs' | 'petnieks' | 'meistars';
-type WizardStep = 'difficulty' | 'pillar' | 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
-
-/**
- * Option A — difficulty maps to STARTING tier in the wizard. Persisted in
- * localStorage so users only pick once. When a multi-task wizard pool exists,
- * `startTier` selects which task is opened first; for now, it's recorded for
- * future routing in PillarPraktibaView.
- */
-const DIFFICULTIES: Array<{ id: DifficultyKey; label: string; emoji: string; blurb: string; startTier: 1 | 2 | 3 }> = [
-    { id: 'iesacejs', label: 'Iesācējs', emoji: '🌱', blurb: 'Tikko sāku, gribu pamatus', startTier: 1 },
-    { id: 'petnieks', label: 'Pētnieks', emoji: '🔍', blurb: 'Pamatos jūtos droši, gribu dziļāk', startTier: 2 },
-    { id: 'meistars', label: 'Meistars', emoji: '🔥', blurb: 'Aktīvi lietoju, gribu izaicinājumu', startTier: 3 },
-];
-
-const DIFFICULTY_STORAGE_KEY = '100x_pratiba_difficulty';
-
-function loadSavedDifficulty(): DifficultyKey | null {
-    if (typeof window === 'undefined') return null;
-    try {
-        const v = window.localStorage.getItem(DIFFICULTY_STORAGE_KEY);
-        if (v === 'iesacejs' || v === 'petnieks' || v === 'meistars') return v;
-    } catch {}
-    return null;
-}
-
-function saveDifficulty(d: DifficultyKey) {
-    if (typeof window === 'undefined') return;
-    try {
-        window.localStorage.setItem(DIFFICULTY_STORAGE_KEY, d);
-    } catch {}
-}
-
-export function getStartTierForDifficulty(d: DifficultyKey | null): 1 | 2 | 3 {
-    if (!d) return 1;
-    return DIFFICULTIES.find((x) => x.id === d)?.startTier ?? 1;
-}
+type WizardStep = 'pillar' | 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
 
 const PILLAR_ICONS: Record<PillarKey, React.ElementType> = {
     ai: Bot,
@@ -95,24 +59,10 @@ interface ClaimResponse {
 }
 
 export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose }: Props) {
-    // The user picks difficulty/pillar/tool inside the wizard (per spec).
-    // Difficulty is persisted in localStorage — once chosen, future wizard runs
-    // skip Step 1 and start at pillar selection. The saved level is shown as
-    // a small badge in the header so the user knows what was carried over.
-    // Initial state must match SSR (no window access), so we hydrate from
-    // localStorage in a useEffect on mount instead of useMemo.
-    const [step, setStep] = useState<WizardStep>('difficulty');
-    const [difficulty, setDifficulty] = useState<DifficultyKey | null>(null);
-    const [hydrated, setHydrated] = useState(false);
-
-    useEffect(() => {
-        const saved = loadSavedDifficulty();
-        if (saved) {
-            setDifficulty(saved);
-            setStep('pillar');
-        }
-        setHydrated(true);
-    }, []);
+    // Wizard starts at pillar selection (or tool if pillar comes pre-set from
+    // PillarPraktibaView). The catalog itself ladders T1→T3 so per-task
+    // difficulty self-rating is redundant.
+    const [step, setStep] = useState<WizardStep>('pillar');
     const [pillar, setPillar] = useState<PillarKey | null>(initialPillar ?? null);
     const [tool, setTool] = useState<string | null>(content.tool); // pre-fill tool from content for v1 pilot
     const [slideIdx, setSlideIdx] = useState(0);
@@ -240,9 +190,9 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
         }
     };
 
-    const stepOrder = (['difficulty', 'pillar', 'tool', 'slides', 'quiz', 'result', 'prakse'] as const);
+    const stepOrder = (['pillar', 'tool', 'slides', 'quiz', 'result', 'prakse'] as const);
     const stepIndex = stepOrder.indexOf(step);
-    const totalSteps = hasPrakse ? 7 : 6;
+    const totalSteps = hasPrakse ? 6 : 5;
     const accent = pillar ? PILLAR_ACCENT[pillar] : '#59b687';
 
     return (
@@ -272,21 +222,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">
                             Pratība · {stepIndex + 1} / {totalSteps}
                         </span>
-                        {difficulty && step !== 'difficulty' && (() => {
-                            const d = DIFFICULTIES.find((x) => x.id === difficulty)!;
-                            return (
-                                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 dark:text-gray-400">
-                                    · <span>{d.emoji}</span>
-                                    <span>{d.label}</span>
-                                    <button
-                                        onClick={() => setStep('difficulty')}
-                                        className="ml-1 underline-offset-2 hover:underline text-gray-400 hover:text-gray-600"
-                                    >
-                                        Mainīt
-                                    </button>
-                                </span>
-                            );
-                        })()}
                     </div>
                     <button
                         onClick={onClose}
@@ -300,20 +235,12 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                 {/* Step content */}
                 <div className="px-5 md:px-7 pb-6 pt-2 min-h-[420px]">
                     <AnimatePresence mode="wait">
-                        {step === 'difficulty' && (
-                            <StepDifficulty
-                                key="difficulty"
-                                value={difficulty}
-                                onPick={(d) => { setDifficulty(d); saveDifficulty(d); setStep('pillar'); }}
-                            />
-                        )}
-
                         {step === 'pillar' && (
                             <StepPillar
                                 key="pillar"
                                 value={pillar}
                                 onPick={(p) => { setPillar(p); setStep('tool'); }}
-                                onBack={() => setStep('difficulty')}
+                                onBack={onClose}
                             />
                         )}
 
@@ -403,40 +330,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
 }
 
 /* ============ Step components (inline, OnboardingWizard pattern) ============ */
-
-function StepDifficulty({
-    value, onPick,
-}: { value: DifficultyKey | null; onPick: (d: DifficultyKey) => void }) {
-    return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pt-2">
-            <div className="text-center space-y-1">
-                <div className="text-4xl mb-2">🎯</div>
-                <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100">Kāds ir tavs līmenis?</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Godīgi — nav pareizas atbildes. Vari mainīt vēlāk.</p>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-                {DIFFICULTIES.map((d) => (
-                    <button
-                        key={d.id}
-                        onClick={() => onPick(d.id)}
-                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
-                            value === d.id
-                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm'
-                                : 'border-gray-200 dark:border-[var(--color-dark-border)] bg-white dark:bg-[var(--color-dark-bg)] hover:border-emerald-300'
-                        }`}
-                    >
-                        <span className="text-3xl">{d.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm font-black text-gray-900 dark:text-gray-100">{d.label}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{d.blurb}</div>
-                        </div>
-                        <ArrowRight size={16} className="text-gray-300 shrink-0" />
-                    </button>
-                ))}
-            </div>
-        </motion.div>
-    );
-}
 
 function StepPillar({
     value, onPick, onBack,
