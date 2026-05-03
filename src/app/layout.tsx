@@ -61,6 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 import { Toaster } from 'react-hot-toast';
+import { Analytics } from '@vercel/analytics/next';
 
 export default async function RootLayout({
   children,
@@ -80,6 +81,7 @@ export default async function RootLayout({
           </NextAuthProvider>
           <Toaster position="bottom-center" />
         </LangProvider>
+        <Analytics />
       </body>
     </html>
   );
