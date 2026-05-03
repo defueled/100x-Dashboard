@@ -41,10 +41,10 @@ export interface WizardContent {
     prakse?: WizardPrakse;
 }
 
-// Pilot content. Replace `task_id` keys with real task_catalog.id once user picks pilots.
-// `demo-*` keys are usable by the dev preview page only.
+// Pilot content. Real task_catalog.id keys open the wizard end-to-end.
+// `demo-*` aliases stay live so the dev preview route keeps working.
 export const PRATIBA_WIZARD_CONTENT: Record<string, WizardContent> = {
-    'demo-chatgpt-basics': {
+    'ai_t1_openai_chatgpt': {
         tool: 'chatbot',
         slides: [
             {
@@ -151,10 +151,20 @@ export const PRATIBA_WIZARD_CONTENT: Record<string, WizardContent> = {
     },
 };
 
+// Aliases let dev-preview pages keep using stable demo IDs while real
+// task_catalog IDs ship the same content to production users.
+const TASK_ID_ALIASES: Record<string, string> = {
+    'demo-chatgpt-basics': 'ai_t1_openai_chatgpt',
+};
+
+function resolveId(taskId: string): string {
+    return TASK_ID_ALIASES[taskId] || taskId;
+}
+
 export function getWizardContent(taskId: string): WizardContent | null {
-    return PRATIBA_WIZARD_CONTENT[taskId] || null;
+    return PRATIBA_WIZARD_CONTENT[resolveId(taskId)] || null;
 }
 
 export function hasWizardContent(taskId: string): boolean {
-    return taskId in PRATIBA_WIZARD_CONTENT;
+    return resolveId(taskId) in PRATIBA_WIZARD_CONTENT;
 }
