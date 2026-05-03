@@ -4,23 +4,16 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight, ArrowLeft, Sparkles, X, CheckCircle2, XCircle,
-    BookOpen, Award, RotateCcw, Bot, TrendingUp, Landmark, Palette, Trophy,
+    BookOpen, Award, RotateCcw, Trophy,
     Lock, MessageSquare, ExternalLink, Copy, Hammer, Clock,
 } from 'lucide-react';
 import {
-    PILLAR_TOOLS, PILLAR_LABEL, PILLAR_ACCENT, PILLAR_SUBTITLE,
+    PILLAR_TOOLS, PILLAR_ACCENT,
     type PillarKey, type ToolOption,
 } from '@/data/pillarTools';
 import { type WizardContent } from '@/data/pratibaWizardContent';
 
-type WizardStep = 'pillar' | 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
-
-const PILLAR_ICONS: Record<PillarKey, React.ElementType> = {
-    ai: Bot,
-    tradfi: TrendingUp,
-    defi: Landmark,
-    culture: Palette,
-};
+type WizardStep = 'tool' | 'slides' | 'quiz' | 'result' | 'prakse';
 
 interface MinimalTask {
     id: string;
@@ -59,11 +52,10 @@ interface ClaimResponse {
 }
 
 export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose }: Props) {
-    // Wizard starts at pillar selection (or tool if pillar comes pre-set from
-    // PillarPraktibaView). The catalog itself ladders T1→T3 so per-task
-    // difficulty self-rating is redundant.
-    const [step, setStep] = useState<WizardStep>('pillar');
-    const [pillar, setPillar] = useState<PillarKey | null>(initialPillar ?? null);
+    // Wizard always opens from a pillar tab (AI/TradFi/DeFi/Culture sidebar),
+    // so pillar comes pre-set via initialPillar. Step 1 is the tool screen.
+    const [step, setStep] = useState<WizardStep>('tool');
+    const [pillar] = useState<PillarKey | null>(initialPillar ?? 'ai');
     const [tool, setTool] = useState<string | null>(content.tool); // pre-fill tool from content for v1 pilot
     const [slideIdx, setSlideIdx] = useState(0);
     const [quizIdx, setQuizIdx] = useState(0);
@@ -190,9 +182,9 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
         }
     };
 
-    const stepOrder = (['pillar', 'tool', 'slides', 'quiz', 'result', 'prakse'] as const);
+    const stepOrder = (['tool', 'slides', 'quiz', 'result', 'prakse'] as const);
     const stepIndex = stepOrder.indexOf(step);
-    const totalSteps = hasPrakse ? 6 : 5;
+    const totalSteps = hasPrakse ? 5 : 4;
     const accent = pillar ? PILLAR_ACCENT[pillar] : '#59b687';
 
     return (
@@ -235,15 +227,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                 {/* Step content */}
                 <div className="px-5 md:px-7 pb-6 pt-2 min-h-[420px]">
                     <AnimatePresence mode="wait">
-                        {step === 'pillar' && (
-                            <StepPillar
-                                key="pillar"
-                                value={pillar}
-                                onPick={(p) => { setPillar(p); setStep('tool'); }}
-                                onBack={onClose}
-                            />
-                        )}
-
                         {step === 'tool' && pillar && (
                             <StepTool
                                 key="tool"
@@ -251,7 +234,7 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
                                 value={tool}
                                 taskTitle={task.title_lv}
                                 onPick={(t) => { setTool(t); setStep('slides'); }}
-                                onBack={() => setStep('pillar')}
+                                onBack={onClose}
                             />
                         )}
 
@@ -330,53 +313,6 @@ export function PratibaWizard({ task, content, initialPillar, onClaimed, onClose
 }
 
 /* ============ Step components (inline, OnboardingWizard pattern) ============ */
-
-function StepPillar({
-    value, onPick, onBack,
-}: { value: PillarKey | null; onPick: (p: PillarKey) => void; onBack: () => void }) {
-    const pillars: PillarKey[] = ['ai', 'tradfi', 'defi', 'culture'];
-    return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pt-2">
-            <div className="text-center space-y-1">
-                <div className="text-4xl mb-2">🧭</div>
-                <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-gray-100">Kuru jomu apgūsim?</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Izvēlies vienu — vari atgriezties citai vēlāk.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-                {pillars.map((p) => {
-                    const Icon = PILLAR_ICONS[p];
-                    const accent = PILLAR_ACCENT[p];
-                    const active = value === p;
-                    return (
-                        <button
-                            key={p}
-                            onClick={() => onPick(p)}
-                            className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                                active ? 'shadow-sm' : 'hover:shadow-sm'
-                            }`}
-                            style={{
-                                borderColor: active ? accent : 'rgba(0,0,0,0.08)',
-                                backgroundColor: active ? `${accent}10` : undefined,
-                            }}
-                        >
-                            <div
-                                className="w-9 h-9 rounded-xl flex items-center justify-center mb-2"
-                                style={{ backgroundColor: `${accent}1f`, color: accent }}
-                            >
-                                <Icon size={18} />
-                            </div>
-                            <div className="text-sm font-black text-gray-900 dark:text-gray-100">{PILLAR_LABEL[p]}</div>
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-snug line-clamp-2">
-                                {PILLAR_SUBTITLE[p]}
-                            </div>
-                        </button>
-                    );
-                })}
-            </div>
-            <NavBar onBack={onBack} />
-        </motion.div>
-    );
-}
 
 function StepTool({
     pillar, value, taskTitle, onPick, onBack,

@@ -8,7 +8,6 @@ import {
     Building2, UserPlus, Target,
 } from 'lucide-react';
 import { GHL_LEVELS } from '@/lib/ghlLevels';
-import { ForumProgressBar } from './DashboardEmbed';
 import { PratibaWizard } from './pratiba/PratibaWizard';
 import { getWizardContent, hasWizardContent } from '@/data/pratibaWizardContent';
 import type { PillarKey } from '@/data/pillarTools';
@@ -368,11 +367,12 @@ export function PillarPraktibaView({ pillar, totalXp, currentLevel, ghlLevel, fo
                     {/* Subtitle */}
                     <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2">{meta.subtitle}</p>
 
-                    {/* Forum progress */}
-                    <ForumProgressBar
+                    {/* Forum progress — level milestone chain */}
+                    <LevelMilestoneBar
                         label={`${meta.title} · foruma progress`}
-                        value={progressPct}
-                        color={meta.accent}
+                        currentLevel={ghlLevel}
+                        targetLevel={meta.ghlThreshold}
+                        accent={meta.accent}
                     />
 
                     {/* Progress summary */}
@@ -981,6 +981,69 @@ function TaskModal({ task, proof, setProof, submitting, claiming, baseClaimed, b
                         >{submitting ? 'Iesniedz...' : `Iesniegt bonusam · +${task.bonus_xp ?? 0} XP`}</button>
                     )}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/* Forum-level milestone chain. At 0/Lvl 1 the user sees the full path to the
+   bonus-unlock level instead of a flat empty bar. */
+function LevelMilestoneBar({
+    label, currentLevel, targetLevel, accent,
+}: { label: string; currentLevel: number; targetLevel: number; accent: string }) {
+    const cur = Math.max(1, Math.min(currentLevel, targetLevel));
+    const reached = cur >= targetLevel;
+    const segments = Math.max(1, targetLevel - 1);
+    const filled = Math.max(0, cur - 1);
+    const fillPct = (filled / segments) * 100;
+    return (
+        <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[var(--color-dark-surface)] border border-gray-100 dark:border-[var(--color-dark-border)] shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</span>
+                <span className="text-xs font-black text-gray-900 dark:text-gray-100">
+                    {reached ? `Atbloķēts · Lvl ${currentLevel}` : `Lvl ${currentLevel} → Lvl ${targetLevel}`}
+                </span>
+            </div>
+            <div className="relative">
+                {/* Track */}
+                <div className="h-2 bg-gray-100 dark:bg-[var(--color-dark-border)] rounded-full overflow-hidden">
+                    <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${fillPct}%`, backgroundColor: accent }}
+                    />
+                </div>
+                {/* Milestone dots — Lvl 1 .. targetLevel */}
+                <div className="absolute inset-0 flex items-center justify-between px-0.5 pointer-events-none">
+                    {Array.from({ length: targetLevel }).map((_, i) => {
+                        const lvl = i + 1;
+                        const reached = cur >= lvl;
+                        return (
+                            <div
+                                key={lvl}
+                                className="w-3.5 h-3.5 rounded-full border-2 transition-colors"
+                                style={{
+                                    backgroundColor: reached ? accent : 'white',
+                                    borderColor: reached ? accent : '#d1d5db',
+                                }}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+            <div className="flex justify-between mt-2">
+                {Array.from({ length: targetLevel }).map((_, i) => {
+                    const lvl = i + 1;
+                    const reached = cur >= lvl;
+                    return (
+                        <span
+                            key={lvl}
+                            className={`text-[10px] font-bold ${reached ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'}`}
+                            style={reached ? { color: accent } : undefined}
+                        >
+                            Lvl {lvl}
+                        </span>
+                    );
+                })}
             </div>
         </div>
     );
